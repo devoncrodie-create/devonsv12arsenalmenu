@@ -1,0 +1,289 @@
+-- GUI Elements
+local Colum1 = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Frame12 = Instance.new("ScrollingFrame")
+local ClickTpButton = Instance.new("TextButton")
+local UICorner_ClickTp = Instance.new("UICorner")
+local KillAllButton = Instance.new("TextButton")
+local UICorner_KillAll = Instance.new("UICorner")
+local KillAllLabel = Instance.new("TextLabel")
+local ClickTpLabel = Instance.new("TextLabel")
+local UICorner_4 = Instance.new("UICorner")
+local AimBotButton = Instance.new("TextButton")
+local UICorner_AimBot = Instance.new("UICorner")
+local AimBotLabel = Instance.new("TextLabel")
+local UICorner_6 = Instance.new("UICorner")
+local SoftAimButton = Instance.new("TextButton")
+local UICorner_7 = Instance.new("UICorner")
+local SoftAimLabel = Instance.new("TextLabel")
+local UICorner_8 = Instance.new("UICorner")
+local HBEButton = Instance.new("TextButton")
+local UICorner_9 = Instance.new("UICorner")
+local HBELabel = Instance.new("TextLabel")
+local UICorner_10 = Instance.new("UICorner")
+local NoClipLabel = Instance.new("TextLabel")
+local UICorner_11 = Instance.new("UICorner")
+local NoClipButton = Instance.new("TextButton")
+local UICorner_12 = Instance.new("UICorner")
+local TriggerBotButton = Instance.new("TextButton")
+local UICorner_13 = Instance.new("UICorner")
+local TriggerBotLabel = Instance.new("TextLabel")
+local UICorner_14 = Instance.new("UICorner")
+local NoClipInst = Instance.new("TextLabel")
+local TabTop = Instance.new("Frame")
+local HubLabel = Instance.new("TextLabel")
+local RoliLabel = Instance.new("TextLabel")
+local UICorner_15 = Instance.new("UICorner")
+local CloseButton = Instance.new("TextButton")
+local TabOtherThing = Instance.new("Frame")
+local UICorner_16 = Instance.new("UICorner")
+local MainTabButton = Instance.new("TextButton")
+local VisualsTabButton = Instance.new("TextButton")
+local Frame22 = Instance.new("ScrollingFrame")
+local ChamButton = Instance.new("TextButton")
+local UICorner_17 = Instance.new("UICorner")
+local ChamLabel = Instance.new("TextLabel")
+local UICorner_18 = Instance.new("UICorner")
+local BoxEspLabel = Instance.new("TextLabel")
+local UICorner_19 = Instance.new("UICorner")
+local BoxEspButton = Instance.new("TextButton")
+local UICorner_20 = Instance.new("UICorner")
+local LVEspButton = Instance.new("TextButton")
+local UICorner_21 = Instance.new("UICorner")
+local LVEspLabel = Instance.new("TextLabel")
+local UICorner_22 = Instance.new("UICorner")
+local HealthEspLabel = Instance.new("TextLabel")
+local UICorner_23 = Instance.new("UICorner")
+local HealthEspButton = Instance.new("TextButton")
+local UICorner_24 = Instance.new("UICorner")
+
+-- Basic Properties
+Colum1.Name = "Colum1"
+Colum1.Parent = game.CoreGui
+Colum1.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = Colum1
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.784, 0, 0.795, 0)
+MainFrame.Size = UDim2.new(0, 335, 0, 199)
+UICorner_15.Parent = MainFrame
+
+-- Frame12
+Frame12.Name = "Frame12"
+Frame12.Parent = MainFrame
+Frame12.Active = true
+Frame12.BackgroundColor3 = Color3.fromRGB(54, 54, 54)
+Frame12.BorderSizePixel = 0
+Frame12.Position = UDim2.new(0.024, 0, 0.036, 0)
+Frame12.Size = UDim2.new(0, 318, 0, 182)
+
+-- Click Tp
+ClickTpButton.Name = "ClickTpButton"
+ClickTpButton.Parent = Frame12
+ClickTpButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ClickTpButton.Position = UDim2.new(0.038, 0, 0.413, 0)
+ClickTpButton.Size = UDim2.new(0, 25, 0, 26)
+ClickTpButton.Font = Enum.Font.SourceSans
+ClickTpButton.Text = ""
+ClickTpButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+ClickTpButton.TextSize = 14
+UICorner_ClickTp.Parent = ClickTpButton
+
+ClickTpLabel.Name = "ClickTpLabel"
+ClickTpLabel.Parent = Frame12
+ClickTpLabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+ClickTpLabel.Position = UDim2.new(0.149, 0, 0.412, 0)
+ClickTpLabel.Size = UDim2.new(0, 125, 0, 26)
+ClickTpLabel.Font = Enum.Font.SourceSans
+ClickTpLabel.Text = "Click To Tp"
+ClickTpLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+ClickTpLabel.TextSize = 14
+UICorner_4.Parent = ClickTpLabel
+
+-- Kill All
+KillAllButton.Name = "KillAllButton"
+KillAllButton.Parent = Frame12
+KillAllButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+KillAllButton.Position = UDim2.new(0.038, 0, 0.212, 0)
+KillAllButton.Size = UDim2.new(0, 25, 0, 26)
+KillAllButton.Font = Enum.Font.SourceSans
+KillAllButton.Text = ""
+KillAllButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+KillAllButton.TextSize = 14
+UICorner_KillAll.Parent = KillAllButton
+
+KillAllLabel.Name = "KillAllLabel"
+KillAllLabel.Parent = Frame12
+KillAllLabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+KillAllLabel.Position = UDim2.new(0.151, 0, 0.211, 0)
+KillAllLabel.Size = UDim2.new(0, 125, 0, 26)
+KillAllLabel.Font = Enum.Font.SourceSans
+KillAllLabel.Text = "Kill All"
+KillAllLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+KillAllLabel.TextSize = 14
+UICorner_2.Parent = KillAllLabel
+
+-- AimBot
+AimBotButton.Name = "AimBotButton"
+AimBotButton.Parent = Frame12
+AimBotButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+AimBotButton.Position = UDim2.new(0.038, 0, 0.008, 0)
+AimBotButton.Size = UDim2.new(0, 25, 0, 26)
+AimBotButton.Font = Enum.Font.SourceSans
+AimBotButton.Text = ""
+AimBotButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+AimBotButton.TextSize = 14
+UICorner_AimBot.Parent = AimBotButton
+
+AimBotLabel.Name = "AimBotLabel"
+AimBotLabel.Parent = Frame12
+AimBotLabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+AimBotLabel.Position = UDim2.new(0.151, 0, 0.008, 0)
+AimBotLabel.Size = UDim2.new(0, 125, 0, 26)
+AimBotLabel.Font = Enum.Font.SourceSans
+AimBotLabel.Text = "AimBot"
+AimBotLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+AimBotLabel.TextSize = 14
+UICorner_6.Parent = AimBotLabel
+
+-- Soft Aim
+SoftAimButton.Name = "SoftAimButton"
+SoftAimButton.Parent = Frame12
+SoftAimButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+SoftAimButton.Position = UDim2.new(0.038, 0, 0.106, 0)
+SoftAimButton.Size = UDim2.new(0, 25, 0, 26)
+SoftAimButton.Font = Enum.Font.SourceSans
+SoftAimButton.Text = ""
+SoftAimButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+SoftAimButton.TextSize = 14
+UICorner_7.Parent = SoftAimButton
+
+SoftAimLabel.Name = "SoftAimLabel"
+SoftAimLabel.Parent = Frame12
+SoftAimLabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+SoftAimLabel.Position = UDim2.new(0.151, 0, 0.106, 0)
+SoftAimLabel.Size = UDim2.new(0, 125, 0, 26)
+SoftAimLabel.Font = Enum.Font.SourceSans
+SoftAimLabel.Text = "SoftAim"
+SoftAimLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+SoftAimLabel.TextSize = 14
+UICorner_8.Parent = SoftAimLabel
+
+-- HBE
+HBEButton.Name = "HBEButton"
+HBEButton.Parent = Frame12
+HBEButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+HBEButton.Position = UDim2.new(0.038, 0, 0.508, 0)
+HBEButton.Size = UDim2.new(0, 25, 0, 26)
+HBEButton.Font = Enum.Font.SourceSans
+HBEButton.Text = ""
+HBEButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+HBEButton.TextSize = 14
+UICorner_9.Parent = HBEButton
+
+HBELabel.Name = "HBELabel"
+HBELabel.Parent = Frame12
+HBELabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+HBELabel.Position = UDim2.new(0.151, 0, 0.508, 0)
+HBELabel.Size = UDim2.new(0, 125, 0, 26)
+HBELabel.Font = Enum.Font.SourceSans
+HBELabel.Text = "HitBoxExpander"
+HBELabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+HBELabel.TextSize = 14
+UICorner_10.Parent = HBELabel
+
+-- NoClip
+NoClipButton.Name = "NoClipButton"
+NoClipButton.Parent = Frame12
+NoClipButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+NoClipButton.Position = UDim2.new(0.038, 0, 0.606, 0)
+NoClipButton.Size = UDim2.new(0, 25, 0, 26)
+NoClipButton.Font = Enum.Font.SourceSans
+NoClipButton.Text = ""
+NoClipButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+NoClipButton.TextSize = 14
+UICorner_12.Parent = NoClipButton
+
+NoClipLabel.Name = "NoClipLabel"
+NoClipLabel.Parent = Frame12
+NoClipLabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+NoClipLabel.Position = UDim2.new(0.151, 0, 0.606, 0)
+NoClipLabel.Size = UDim2.new(0, 125, 0, 26)
+NoClipLabel.Font = Enum.Font.SourceSans
+NoClipLabel.Text = "NoClip"
+NoClipLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+NoClipLabel.TextSize = 14
+UICorner_11.Parent = NoClipLabel
+
+-- Trigger Bot
+TriggerBotButton.Name = "TriggerBotButton"
+TriggerBotButton.Parent = Frame12
+TriggerBotButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+TriggerBotButton.Position = UDim2.new(0.038, 0, 0.703, 0)
+TriggerBotButton.Size = UDim2.new(0, 25, 0, 26)
+TriggerBotButton.Font = Enum.Font.SourceSans
+TriggerBotButton.Text = ""
+TriggerBotButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+TriggerBotButton.TextSize = 14
+UICorner_13.Parent = TriggerBotButton
+
+TriggerBotLabel.Name = "TriggerBotLabel"
+TriggerBotLabel.Parent = Frame12
+TriggerBotLabel.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+TriggerBotLabel.Position = UDim2.new(0.151, 0, 0.703, 0)
+TriggerBotLabel.Size = UDim2.new(0, 125, 0, 26)
+TriggerBotLabel.Font = Enum.Font.SourceSans
+TriggerBotLabel.Text = "TriggerBot"
+TriggerBotLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+TriggerBotLabel.TextSize = 14
+UICorner_14.Parent = TriggerBotLabel
+
+-- Scripts
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+-- Click Tp
+ClickTpButton.MouseButton1Click:Connect(function()
+    ClickTpButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if LocalPlayer.Character then
+                LocalPlayer.Character:MoveTo(Mouse.Hit.Position)
+            end
+        end
+    end)
+end)
+
+-- Kill All
+KillAllButton.MouseButton1Click:Connect(function()
+    KillAllButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/MisterGunXD/yes/main/rolve%3C3.lua"))()
+end)
+
+-- AimBot, SoftAim, HBE, NoClip, TriggerBot scripts would follow similarly
+-- Example toggle template:
+local function toggleButton(btn, stateTable, key)
+    btn.MouseButton1Click:Connect(function()
+        stateTable[key] = not stateTable[key]
+        btn.BackgroundColor3 = stateTable[key] and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    end)
+end
+
+local State = {
+    AimBot = false,
+    SoftAim = false,
+    HBE = false,
+    NoClip = false,
+    TriggerBot = false
+}
+
+toggleButton(AimBotButton, State, "AimBot")
+toggleButton(SoftAimButton, State, "SoftAim")
+toggleButton(HBEButton, State, "HBE")
+toggleButton(NoClipButton, State, "NoClip")
+toggleButton(TriggerBotButton, State, "TriggerBot")
