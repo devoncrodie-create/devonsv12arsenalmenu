@@ -1,7 +1,10 @@
 --// Services
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
 
 --// Create ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
@@ -14,6 +17,8 @@ MainFrame.Size = UDim2.new(0, 300, 0, 250)
 MainFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 --// Title Label
@@ -28,12 +33,12 @@ TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 24
 TitleLabel.Parent = MainFrame
 
---// Button function
+--// Button creator
 local function createButton(name, yPos)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.8, 0, 0, 40)
     button.Position = UDim2.new(0.1, 0, 0, yPos)
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.BackgroundColor3 = Color3.fromRGB(150, 0, 0) -- off = red
     button.BorderSizePixel = 0
     button.Text = name
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -48,15 +53,147 @@ local AimbotButton = createButton("Aimbot", 60)
 local ESPButton = createButton("ESP", 110)
 local HitboxExtenderButton = createButton("Hitbox Extender", 160)
 
---// Example button click actions
-AimbotButton.MouseButton1Click:Connect(function()
-    print("Aimbot toggled!")
-end)
+--// Toggle states
+local aimbotEnabled = false
+local hitboxEnabled = false
+local espEnabled = false
 
-ESPButton.MouseButton1Click:Connect(function()
-    print("ESP toggled!")
+--// Update button color based on toggle
+local function updateButtonColor(button, state)
+    if state then
+        button.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- green
+    else
+        button.BackgroundColor3 = Color3.fromRGB(150, 0, 0) -- red
+    end
+end
+
+--// Team check
+local function isSameTeam(otherPlayer)
+    return otherPlayer.Team == player.Team
+end
+
+--// ESP table
+local ESPBoxes = {}
+
+local function createESPBox(target)
+    local box = Drawing.new("Quad")
+    box.Color = Color3.fromRGB(255,0,0)
+    box.Thickness = 2
+    box.Transparency = 0.5
+    box.Visible = false
+    ESPBoxes[target] = box
+end
+
+local function removeESPBox(target)
+    if ESPBoxes[target] then
+        ESPBoxes[target]:Remove()
+        ESPBoxes[target] = nil
+    end
+end
+
+local function updateESP()
+    for p, box in pairs(ESPBoxes) do
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = p.Character.HumanoidRootPart
+            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            if onScreen then
+                local size = Vector2.new(100,100)
+                local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
+                local bottomRight = topLeft + size
+                box.PointA = topLeft
+                box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
+                box.PointC = bottomRight
+                box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
+                box.Visible = true
+            else
+                box.Visible = false
+            end
+        else
+            box.Visible = false
+        end
+    end
+end
+
+--// Button events
+AimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    updateButtonColor(AimbotButton, aimbotEnabled)
 end)
 
 HitboxExtenderButton.MouseButton1Click:Connect(function()
-    print("Hitbox Extender toggled!")
+    hitboxEnabled = not hitboxEnabled
+    updateButtonColor(HitboxExtenderButton, hitboxEnabled)
+end)
+
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    updateButtonColor(ESPButton, espEnabled)
+    if espEnabled then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and not isSameTeam(p) then
+                createESPBox(p)
+            end
+        end
+    else
+        for p, _ in pairs(ESPBoxes) do
+            removeESPBox(p)
+        end
+    end
+end)
+
+--// Main loop
+RunService.RenderStepped:Connect(function()
+    -- Aimbot
+    if aimbotEnabled then
+        local closestPlayer
+        local shortestDistance = math.huge
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and not isSameTeam(otherPlayer) and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = otherPlayer.Character.HumanoidRootPart
+                local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                if onScreen then
+                    local mouse = player:GetMouse()
+                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        closestPlayer = otherPlayer
+                    end
+                end
+            end
+        end
+
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local target = closestPlayer.Character.HumanoidRootPart
+            -- TODO: Replace with actual aiming code
+        end
+    end
+
+    -- Hitbox Extender
+    if hitboxEnabled then
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and not isSameTeam(otherPlayer) and otherPlayer.Character then
+                local hrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.Size = Vector3.new(10,10,10)
+                    hrp.Transparency = 0.5
+                end
+            end
+        end
+    end
+
+    -- ESP Update
+    if espEnabled then
+        updateESP()
+    end
+end)
+
+--// Handle players joining/leaving for ESP
+Players.PlayerAdded:Connect(function(p)
+    if espEnabled and p ~= player and not isSameTeam(p) then
+        createESPBox(p)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    removeESPBox(p)
 end)
