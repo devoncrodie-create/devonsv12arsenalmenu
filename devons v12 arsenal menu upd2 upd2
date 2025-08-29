@@ -18,7 +18,6 @@ MainFrame.Position = UDim2.new(0.5, -230, 0.5, -325)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local UICornerMain = Instance.new("UICorner")
@@ -60,7 +59,7 @@ CloseLabel.Font = Enum.Font.Gotham
 CloseLabel.TextSize = 16
 CloseLabel.Parent = MainFrame
 
---// Button Creator
+--// Buttons
 local function createButton(name, yPos)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.8,0,0,45)
@@ -88,7 +87,6 @@ local function createButton(name, yPos)
     return btn
 end
 
---// Buttons
 local AimbotButton = createButton("Aimbot", 80)
 local ESPButton = createButton("ESP", 150)
 local HitboxButton = createButton("Hitbox Extender", 220)
@@ -145,28 +143,31 @@ RapidFireButton.MouseButton1Click:Connect(function()
     updateButtonColor(RapidFireButton, rapidFireEnabled)
 end)
 
---// Utility
-local function isEnemy(plr)
-    return plr.Team ~= player.Team
-end
+--// Head/Torso Selector
+local PartToggle = Instance.new("TextButton")
+PartToggle.Size = UDim2.new(0, 60, 0, 30)
+PartToggle.Position = UDim2.new(0.65, 0, 80/650, 5)
+PartToggle.BackgroundColor3 = Color3.fromRGB(80,80,80)
+PartToggle.BorderSizePixel = 0
+PartToggle.Text = "Head"
+PartToggle.TextColor3 = Color3.fromRGB(255,255,255)
+PartToggle.Font = Enum.Font.Gotham
+PartToggle.TextSize = 14
+PartToggle.Parent = MainFrame
 
---// ESP Table
-local ESPBoxes = {}
-local function createESP(plr)
-    if ESPBoxes[plr] then return end
-    local box = Drawing.new("Quad")
-    box.Color = Color3.fromRGB(255,0,0)
-    box.Thickness = 2
-    box.Transparency = 0.5
-    box.Visible = true
-    ESPBoxes[plr] = box
-end
-local function removeESP(plr)
-    if ESPBoxes[plr] then
-        ESPBoxes[plr]:Remove()
-        ESPBoxes[plr] = nil
+local UICornerToggle = Instance.new("UICorner")
+UICornerToggle.CornerRadius = UDim.new(0,6)
+UICornerToggle.Parent = PartToggle
+
+PartToggle.MouseButton1Click:Connect(function()
+    if aimbotPart == "Head" then
+        aimbotPart = "Torso"
+        PartToggle.Text = "Torso"
+    else
+        aimbotPart = "Head"
+        PartToggle.Text = "Head"
     end
-end
+end)
 
 --// Slider Creator
 local function createSlider(name, yPos, min, max, default, callback)
@@ -230,6 +231,28 @@ createSlider("Hitbox Size", 430, 1, 15, hitboxSize, function(val) hitboxSize = v
 createSlider("Aimbot FOV", 490, 50, 500, 200, function(val) aimbotFOV = val end)
 createSlider("Rapid Fire Speed", 550, 0.01, 0.5, 0.1, function(val) rapidFireDelay = val end)
 
+--// ESP Table
+local ESPBoxes = {}
+local function createESP(plr)
+    if ESPBoxes[plr] then return end
+    local box = Drawing.new("Quad")
+    box.Color = Color3.fromRGB(255,0,0)
+    box.Thickness = 2
+    box.Transparency = 0.5
+    box.Visible = true
+    ESPBoxes[plr] = box
+end
+local function removeESP(plr)
+    if ESPBoxes[plr] then
+        ESPBoxes[plr]:Remove()
+        ESPBoxes[plr] = nil
+    end
+end
+
+local function isEnemy(plr)
+    return plr.Team ~= player.Team
+end
+
 --// Main Loop
 RunService.RenderStepped:Connect(function()
     local mouse = player:GetMouse()
@@ -242,29 +265,26 @@ RunService.RenderStepped:Connect(function()
             if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(aimbotPart) then
                 local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[aimbotPart].Position)
                 if onScreen then
-                    local dist = (Vector2.new(mouse.X,mouse.Y) - Vector2.new(screenPos.X,screenPos.Y)).Magnitude
-                    if dist < math.min(shortest, aimbotFOV) then
+                    local dist = (Vector2.new(screenPos.X,screenPos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude
+                    if dist < shortest and dist < aimbotFOV then
                         shortest = dist
                         closest = plr
                     end
                 end
             end
         end
-        if closest and closest.Character and closest.Character:FindFirstChild(aimbotPart) then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Character[aimbotPart].Position)
+        if closest then
+            local hrp = closest.Character[aimbotPart]
+            mousemoverel((Camera:WorldToViewportPoint(hrp.Position) - Vector3.new(mouse.X,mouse.Y,0)).Unit*0.5)
         end
     end
 
     -- Hitbox Extender
     if hitboxEnabled then
         for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and isEnemy(plr) and plr.Character then
-                for _,part in pairs(plr.Character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
-                        part.Transparency = 0.5
-                    end
-                end
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                plr.Character.HumanoidRootPart.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
+                plr.Character.HumanoidRootPart.Transparency = 0.5
             end
         end
     end
@@ -273,11 +293,11 @@ RunService.RenderStepped:Connect(function()
     if espEnabled then
         for _,plr in pairs(Players:GetPlayers()) do
             if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                createESP(plr)
                 local hrp = plr.Character.HumanoidRootPart
                 local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
                 if onScreen then
-                    if not ESPBoxes[plr] then createESP(plr) end
-                    local size = Vector2.new(50,50)
+                    local size = Vector2.new(100,100)
                     local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
                     local bottomRight = topLeft + size
                     local box = ESPBoxes[plr]
@@ -287,24 +307,20 @@ RunService.RenderStepped:Connect(function()
                     box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
                     box.Visible = true
                 else
-                    if ESPBoxes[plr] then ESPBoxes[plr].Visible = false end
+                    ESPBoxes[plr].Visible = false
                 end
-            else
-                removeESP(plr)
             end
         end
     end
 
     -- Kill All
     if killAllEnabled then
-        for _, plr in pairs(Players:GetPlayers()) do
+        for _,plr in pairs(Players:GetPlayers()) do
             if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = plr.Character.HumanoidRootPart
-                local direction = (hrp.Position - Camera.CFrame.Position).Unit
-                local newPos = hrp.Position - direction*3
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(newPos)
-                local tool = player.Character:FindFirstChildOfClass("Tool")
-                if tool and tool:FindFirstChild("Handle") then
+                player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
+                -- Fire tool click (simulate shooting)
+                if player.Character:FindFirstChildOfClass("Tool") then
+                    local tool = player.Character:FindFirstChildOfClass("Tool")
                     tool:Activate()
                 end
             end
@@ -312,13 +328,45 @@ RunService.RenderStepped:Connect(function()
     end
 
     -- Rapid Fire
-    if rapidFireEnabled then
-        if not rapidFireLast or tick() - rapidFireLast >= rapidFireDelay then
-            rapidFireLast = tick()
-            local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-            if tool and tool:FindFirstChild("Handle") then
-                tool:Activate()
-            end
+    if rapidFireEnabled and tick() - rapidFireLast >= rapidFireDelay then
+        rapidFireLast = tick()
+        if player.Character:FindFirstChildOfClass("Tool") then
+            player.Character:FindFirstChildOfClass("Tool"):Activate()
         end
+    end
+end)
+
+--// Header Drag
+local dragging = false
+local dragInput, mousePos, framePos
+
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = UserInputService:GetMouseLocation()
+        framePos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = UserInputService:GetMouseLocation() - mousePos
+        MainFrame.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
     end
 end)
