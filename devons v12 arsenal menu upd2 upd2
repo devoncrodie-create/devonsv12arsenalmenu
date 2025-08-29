@@ -1,160 +1,197 @@
--- DevonsToolkit_UI_withKeybind_V12.lua (LocalScript)
--- Place in StarterPlayer > StarterPlayerScripts
--- SAFE for use in your OWN Roblox game.
-
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-
-local LocalPlayer = Players.LocalPlayer
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- ======= Configurable defaults =======
-local DEFAULT_FLY_SPEED = 50
-local DEFAULT_HITBOX_SCALE = 3
-local DEFAULT_FOV = 200
-local UI_WIDTH = 360
-local DEFAULT_TOGGLE_KEY = Enum.KeyCode.RightControl
--- =====================================
+--// ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DevonsArsenalMenu"
+ScreenGui.Parent = PlayerGui
 
---// Utility helpers
-local function make(parent, class, props)
-	local obj = Instance.new(class)
-	if props then for k,v in pairs(props) do obj[k] = v end end
-	obj.Parent = parent
-	return obj
+--// Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 450, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+--// Header
+local Header = Instance.new("TextLabel")
+Header.Size = UDim2.new(1,0,0,50)
+Header.Position = UDim2.new(0,0,0,0)
+Header.BackgroundColor3 = Color3.fromRGB(60,60,60)
+Header.BorderSizePixel = 0
+Header.Text = "Devons Arsenal Menu (v12)"
+Header.TextColor3 = Color3.fromRGB(255,255,255)
+Header.Font = Enum.Font.GothamBold
+Header.TextSize = 24
+Header.Parent = MainFrame
+
+--// Close Label
+local CloseLabel = Instance.new("TextLabel")
+CloseLabel.Size = UDim2.new(1,0,0,20)
+CloseLabel.Position = UDim2.new(0,0,1,-25)
+CloseLabel.BackgroundTransparency = 1
+CloseLabel.Text = "Right Ctrl to Close"
+CloseLabel.TextColor3 = Color3.fromRGB(200,200,200)
+CloseLabel.Font = Enum.Font.Gotham
+CloseLabel.TextSize = 16
+CloseLabel.Parent = MainFrame
+
+--// Button Creator
+local function createButton(name, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.8,0,0,40)
+    btn.Position = UDim2.new(0.1,0,0,yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    btn.BorderSizePixel = 0
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 20
+    btn.Parent = MainFrame
+    return btn
 end
 
-local function tweenProperty(instance, info, props)
-	TweenService:Create(instance, info, props):Play()
+--// Buttons
+local AimbotButton = createButton("Aimbot", 60)
+local ESPButton = createButton("ESP", 120)
+local HitboxButton = createButton("Hitbox Extender", 180)
+
+--// Toggle States
+local aimbotEnabled = false
+local espEnabled = false
+local hitboxEnabled = false
+local hitboxSize = 5
+local aimbotPart = "Head"
+local flyEnabled = false
+local flySpeed = 50
+local noclipEnabled = false
+
+--// Update Button Colors
+local function updateButtonColor(btn,state)
+    if state then
+        btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+    else
+        btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    end
 end
 
-local function formatOnOff(state) return state and "[ON]" or "[OFF]" end
-local function keyName(k) return tostring(k):gsub("Enum.KeyCode.", "") end
+--// Close Menu Keybind
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+    end
+end)
 
---// Build UI
-local screen = make(PlayerGui, "ScreenGui", {Name = "DevonsArsenalMenu"})
-screen.ResetOnSpawn = false
+--// Button Events
+AimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    updateButtonColor(AimbotButton, aimbotEnabled)
+end)
 
-local main = make(screen, "Frame", {
-	Name = "Main",
-	Size = UDim2.new(0, UI_WIDTH, 0, 520),
-	Position = UDim2.new(0.5, -UI_WIDTH/2, 0.5, -260),
-	BackgroundColor3 = Color3.fromRGB(25,25,30),
-	BorderSizePixel = 0,
-})
-main.Active = true
-main.Draggable = true
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    updateButtonColor(ESPButton, espEnabled)
+end)
 
-local header = make(main, "Frame", {
-	Size = UDim2.new(1,0,0,56),
-	Position = UDim2.new(0,0,0,0),
-	BackgroundColor3 = Color3.fromRGB(36,36,40),
-	BorderSizePixel = 0
-})
-make(header, "UICorner", {CornerRadius = UDim.new(0,8)})
-make(header, "TextLabel", {
-	Size = UDim2.new(1,-16,1,0),
-	Position = UDim2.new(0,8,0,0),
-	BackgroundTransparency = 1,
-	Text = "Devon's Arsenal Menu (V12)",
-	TextColor3 = Color3.fromRGB(230,230,230),
-	Font = Enum.Font.GothamBold,
-	TextSize = 20,
-	TextXAlignment = Enum.TextXAlignment.Left
-})
+HitboxButton.MouseButton1Click:Connect(function()
+    hitboxEnabled = not hitboxEnabled
+    updateButtonColor(HitboxButton, hitboxEnabled)
+end)
 
--- keybind label / change button row (in header)
-local keyLabel = make(header, "TextLabel", {
-	Size = UDim2.new(0,160,0,24),
-	Position = UDim2.new(1,-170,0,16),
-	BackgroundTransparency = 1,
-	Text = "Toggle: "..keyName(DEFAULT_TOGGLE_KEY),
-	TextColor3 = Color3.fromRGB(200,200,200),
-	Font = Enum.Font.Gotham,
-	TextSize = 14,
-	TextXAlignment = Enum.TextXAlignment.Right
-})
-local changeKeyBtn = make(header, "TextButton", {
-	Size = UDim2.new(0,80,0,24),
-	Position = UDim2.new(1,-80,0,16),
-	Text = "Change",
-	Font = Enum.Font.GothamSemibold,
-	TextSize = 13,
-	BackgroundColor3 = Color3.fromRGB(80,80,90),
-	TextColor3 = Color3.fromRGB(240,240,240),
-	BorderSizePixel = 0
-})
-make(changeKeyBtn, "UICorner", {CornerRadius = UDim.new(0,6)})
-
--- content
-local content = make(main, "ScrollingFrame", {
-	Size = UDim2.new(1,-16,1,-82),
-	Position = UDim2.new(0,8,0,64),
-	CanvasSize = UDim2.new(0,0,0,1200),
-	BackgroundTransparency = 1,
-	ScrollBarThickness = 6
-})
-local uiList = make(content, "UIListLayout", {Padding = UDim.new(0,12), FillDirection = Enum.FillDirection.Vertical, SortOrder = Enum.SortOrder.LayoutOrder})
-
--- small helper to create rows
-local function createRow(height)
-	local row = make(content, "Frame", {Size = UDim2.new(1,0,0,height), BackgroundTransparency = 1})
-	return row
+--// Utility Functions
+local function isEnemy(plr)
+    return plr.Team ~= Players.LocalPlayer.Team
 end
 
--- button factory
-local function createToggleButton(text)
-	local row = createRow(48)
-	local btn = make(row, "TextButton", {
-		Size = UDim2.new(1,0,1,0),
-		BackgroundColor3 = Color3.fromRGB(150, 40, 40),
-		Text = text.." "..formatOnOff(false),
-		TextColor3 = Color3.fromRGB(245,245,245),
-		Font = Enum.Font.GothamSemibold,
-		TextSize = 16,
-		BorderSizePixel = 0
-	})
-	make(btn, "UICorner", {CornerRadius = UDim.new(0,8)})
-	return row, btn
+--// ESP Table
+local ESPBoxes = {}
+
+local function createESP(plr)
+    if ESPBoxes[plr] then return end
+    local box = Drawing.new("Quad")
+    box.Color = Color3.fromRGB(255,0,0)
+    box.Thickness = 2
+    box.Transparency = 0.5
+    box.Visible = true
+    ESPBoxes[plr] = box
 end
 
-local function createSliderRow(labelText, minVal, maxVal, default)
-	local row = createRow(64)
-	local label = make(row, "TextLabel", {
-		Size = UDim2.new(0.45,0,0.4,0), Position = UDim2.new(0,0,0,6),
-		BackgroundTransparency = 1, Text = labelText,
-		TextColor3 = Color3.fromRGB(230,230,230), Font = Enum.Font.Gotham, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left
-	})
-	local valueLabel = make(row, "TextLabel", {
-		Size = UDim2.new(0.25,0,0.4,0), Position = UDim2.new(0.7,0,0,6),
-		BackgroundTransparency = 1, Text = tostring(default), TextColor3 = Color3.fromRGB(200,200,200),
-		Font = Enum.Font.Gotham, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Right
-	})
-	local sliderFrame = make(row, "Frame", {Size = UDim2.new(1,0,0.55,0), Position = UDim2.new(0,0,0.46,0), BackgroundColor3 = Color3.fromRGB(45,45,50), BorderSizePixel = 0})
-	make(sliderFrame, "UICorner", {CornerRadius = UDim.new(0,6)})
-	local rail = make(sliderFrame, "Frame", {Size = UDim2.new(1,-12,1,0), Position = UDim2.new(0,6,0,0), BackgroundColor3 = Color3.fromRGB(60,60,66), BorderSizePixel = 0})
-	make(rail, "UICorner", {CornerRadius = UDim.new(0,6)})
-	local knob = make(rail, "TextButton", {Size = UDim2.new((default-minVal)/(maxVal-minVal),0,1,0), BackgroundColor3 = Color3.fromRGB(140,140,255), BorderSizePixel = 0, Text = ""})
-	make(knob, "UICorner", {CornerRadius = UDim.new(0,6)})
-	return row, knob, valueLabel, minVal, maxVal
+local function removeESP(plr)
+    if ESPBoxes[plr] then
+        ESPBoxes[plr]:Remove()
+        ESPBoxes[plr] = nil
+    end
 end
 
-local function createColorPickerRow(name, defaultColor)
-	local row = createRow(94)
-	local label = make(row, "TextLabel", {Size = UDim2.new(1,0,0,18), Position = UDim2.new(0,0,0,4), BackgroundTransparency = 1, Text = name, TextColor3 = Color3.fromRGB(230,230,230), Font = Enum.Font.Gotham, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left})
-	local rRow, rKnob, rVal = createSliderRow("R", 0, 255, math.floor(defaultColor.R * 255)); rRow.Parent = row; rRow.Position = UDim2.new(0,0,0,24)
-	local gRow, gKnob, gVal = createSliderRow("G", 0, 255, math.floor(defaultColor.G * 255)); gRow.Parent = row; gRow.Position = UDim2.new(0,0,0,52)
-	local bRow, bKnob, bVal = createSliderRow("B", 0, 255, math.floor(defaultColor.B * 255)); bRow.Parent = row; bRow.Position = UDim2.new(0,0,0,80)
-	return row, {rKnob, gKnob, bKnob}, {rVal, gVal, bVal}
-end
+--// Main Loop
+RunService.RenderStepped:Connect(function()
+    local mouse = Players.LocalPlayer:GetMouse()
+    
+    -- Aimbot
+    if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local closest
+        local shortest = math.huge
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(aimbotPart) then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[aimbotPart].Position)
+                if onScreen then
+                    local dist = (Vector2.new(mouse.X,mouse.Y) - Vector2.new(screenPos.X,screenPos.Y)).Magnitude
+                    if dist < shortest then
+                        shortest = dist
+                        closest = plr
+                    end
+                end
+            end
+        end
+        if closest and closest.Character and closest.Character:FindFirstChild(aimbotPart) then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Character[aimbotPart].Position)
+        end
+    end
 
--- The rest of your code remains fully functional, but every lerp/movement and UI tween now uses TweenService or smooth Lerp
--- Camera smoothing is applied in smoothLookAt function
--- Fly movement uses BodyVelocity with smooth velocity application
--- Button toggle uses TweenService for color transitions
+    -- Hitbox Extender
+    if hitboxEnabled then
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character then
+                for _,part in pairs(plr.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
+                        part.Transparency = 0.5
+                    end
+                end
+            end
+        end
+    end
 
-print("Devon's Arsenal Menu (V12) loaded — Studio-safe features active. Toggle key:", keyName(DEFAULT_TOGGLE_KEY))
+    -- ESP Update
+    if espEnabled then
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                if onScreen then
+                    if not ESPBoxes[plr] then createESP(plr) end
+                    local size = Vector2.new(50,50)
+                    local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
+                    local bottomRight = topLeft + size
+                    local box = ESPBoxes[plr]
+                    box.PointA = topLeft
+                    box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
+                    box.PointC = bottomRight
+                    box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
+                    box.Visible = true
+                else
+                    if ESPBoxes[plr] then ESPBoxes[plr].Visible = false end
+                end
+            else
+                removeESP(plr)
+            end
+        end
+    end
+end)
