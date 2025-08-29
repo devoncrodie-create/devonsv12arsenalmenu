@@ -6,6 +6,7 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
+local mouse = player:GetMouse()
 
 --// Create ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
@@ -14,290 +15,254 @@ ScreenGui.Parent = PlayerGui
 
 --// Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 600)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
-MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+MainFrame.Size = UDim2.new(0, 450, 0, 650)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -325)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35,35,40)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
--- Gradient background
+-- Gradient
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(50,50,60)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,25))}
 gradient.Rotation = 45
 gradient.Parent = MainFrame
 
---// Title Label
+--// Title
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 50)
-TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+TitleLabel.Size = UDim2.new(1,0,0,50)
+TitleLabel.Position = UDim2.new(0,0,0,0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Text = "Devons Arsenal (v12)"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextSize = 26
+TitleLabel.TextSize = 28
 TitleLabel.Parent = MainFrame
 
--- Helper function: create buttons
-local function createButton(name, yPos)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.8, 0, 0, 40)
-    button.Position = UDim2.new(0.1, 0, 0, yPos)
-    button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    button.BorderSizePixel = 0
-    button.Text = name
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 20
-    button.Parent = MainFrame
-    -- hover effect
-    button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180,0,0)}):Play()
-    end)
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(150,0,0)}):Play()
-    end)
-    return button
+--// Helper: Buttons
+local function createButton(name, y)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.8,0,0,40)
+	btn.Position = UDim2.new(0.1,0,0,y)
+	btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+	btn.BorderSizePixel = 0
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 20
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Text = name
+	btn.Parent = MainFrame
+	btn.MouseEnter:Connect(function() TweenService:Create(btn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(180,0,0)}):Play() end)
+	btn.MouseLeave:Connect(function() TweenService:Create(btn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(150,0,0)}):Play() end)
+	return btn
 end
 
--- Helper function: create slider
+--// Helper: Slider
 local function createSlider(name, min, max, yPos, default)
-    local sliderLabel = Instance.new("TextLabel")
-    sliderLabel.Size = UDim2.new(0.8, 0, 0, 30)
-    sliderLabel.Position = UDim2.new(0.1, 0, 0, yPos)
-    sliderLabel.BackgroundTransparency = 1
-    sliderLabel.Text = name..": "..default
-    sliderLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    sliderLabel.Font = Enum.Font.Gotham
-    sliderLabel.TextSize = 18
-    sliderLabel.Parent = MainFrame
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(0.8,0,0,25)
+	lbl.Position = UDim2.new(0.1,0,0,yPos)
+	lbl.BackgroundTransparency = 1
+	lbl.TextColor3 = Color3.fromRGB(255,255,255)
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 18
+	lbl.Text = name..": "..default
+	lbl.Parent = MainFrame
 
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = UDim2.new(0.8, 0, 0, 10)
-    sliderFrame.Position = UDim2.new(0.1, 0, 0, yPos+30)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(80,80,80)
-    sliderFrame.Parent = MainFrame
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0.8,0,0,10)
+	frame.Position = UDim2.new(0.1,0,0,yPos+25)
+	frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
+	frame.Parent = MainFrame
 
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((default-min)/(max-min),0,1,0)
-    sliderFill.BackgroundColor3 = Color3.fromRGB(0,200,0)
-    sliderFill.Parent = sliderFrame
+	local fill = Instance.new("Frame")
+	fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+	fill.BackgroundColor3 = Color3.fromRGB(0,200,0)
+	fill.Parent = frame
 
-    sliderFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mouseMove
-            mouseMove = UserInputService.InputChanged:Connect(function(move)
-                if move.UserInputType == Enum.UserInputType.MouseMovement then
-                    local relative = math.clamp((move.Position.X - sliderFrame.AbsolutePosition.X)/sliderFrame.AbsoluteSize.X,0,1)
-                    sliderFill.Size = UDim2.new(relative,0,1,0)
-                    local value = math.floor(min + relative*(max-min))
-                    sliderLabel.Text = name..": "..value
-                    sliderLabel.Value = value
-                end
-            end)
-            UserInputService.InputEnded:Connect(function(endInput)
-                if endInput.UserInputType == Enum.UserInputType.MouseButton1 then
-                    mouseMove:Disconnect()
-                end
-            end)
-        end
-    end)
-    sliderLabel.Value = default
-    return sliderLabel
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local conn
+			conn = UserInputService.InputChanged:Connect(function(move)
+				if move.UserInputType == Enum.UserInputType.MouseMovement then
+					local rel = math.clamp((move.Position.X - frame.AbsolutePosition.X)/frame.AbsoluteSize.X,0,1)
+					fill.Size = UDim2.new(rel,0,1,0)
+					local value = math.floor(min + rel*(max-min))
+					lbl.Text = name..": "..value
+					lbl.Value = value
+				end
+			end)
+			local endConn
+			endConn = UserInputService.InputEnded:Connect(function(endInput)
+				if endInput.UserInputType == Enum.UserInputType.MouseButton1 then
+					conn:Disconnect()
+					endConn:Disconnect()
+				end
+			end)
+		end
+	end)
+	lbl.Value = default
+	return lbl
 end
 
--- Helper: color picker (simple RGB sliders)
-local function createColorPicker(name, yPos, default)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.8,0,0,30)
-    label.Position = UDim2.new(0.1,0,0,yPos)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.TextColor3 = default
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 18
-    label.Parent = MainFrame
-    return label
+--// Helper: Color Picker (simple)
+local function createColorLabel(name, color, yPos)
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(0.8,0,0,25)
+	lbl.Position = UDim2.new(0.1,0,0,yPos)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = name
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 18
+	lbl.TextColor3 = color
+	lbl.Parent = MainFrame
+	return lbl
 end
 
---// Create main buttons
+--// Buttons
 local startY = 70
-local AimbotButton = createButton("Aimbot", startY)
-local ESPButton = createButton("ESP", startY+60)
-local HitboxButton = createButton("Hitbox Extender", startY+120)
-local FlyButton = createButton("Fly", startY+180)
-local NoclipButton = createButton("Noclip", startY+240)
-local HeadTorsoButton = createButton("Aimbot Part: Head", startY+300)
+local AimbotBtn = createButton("Aimbot", startY)
+local ESPBtn = createButton("ESP", startY+60)
+local HitboxBtn = createButton("Hitbox Extender", startY+120)
+local FlyBtn = createButton("Fly", startY+180)
+local NoclipBtn = createButton("Noclip", startY+240)
+local HeadTorsoBtn = createButton("Aimbot Part: Head", startY+300)
 
---// Create sliders
-local FOVSlider = createSlider("Aimbot FOV", 50, 500, startY+360, 150)
-local HitboxSizeSlider = createSlider("Hitbox Size", 2, 20, startY+420, 5)
-local FlySpeedSlider = createSlider("Fly Speed", 20, 300, startY+480, 50)
+--// Sliders
+local FOVSlider = createSlider("Aimbot FOV",50,500,startY+360,150)
+local HitboxSlider = createSlider("Hitbox Size",2,20,startY+420,5)
+local FlySpeedSlider = createSlider("Fly Speed",20,300,startY+480,50)
 
---// Create color pickers
-local ESPColorLabel = createColorPicker("ESP Color", startY+540, Color3.fromRGB(255,0,0))
-local HitboxColorLabel = createColorPicker("Hitbox Color", startY+570, Color3.fromRGB(255,0,0))
+--// Color labels
+local ESPColorLbl = createColorLabel("ESP Color",Color3.fromRGB(255,0,0),startY+540)
+local HitboxColorLbl = createColorLabel("Hitbox Color",Color3.fromRGB(255,0,0),startY+570)
 
---// Toggle states
-local aimbotEnabled = false
-local espEnabled = false
-local hitboxEnabled = false
-local flyEnabled = false
-local noclipEnabled = false
+--// States
+local aimbotEnabled, espEnabled, hitboxEnabled, flyEnabled, noclipEnabled = false,false,false,false,false
 local aimPart = "Head"
-local fov = FOVSlider.Value
-local hitboxSize = HitboxSizeSlider.Value
-local flySpeed = FlySpeedSlider.Value
-local ESPColor = ESPColorLabel.TextColor3
-local hitboxColor = HitboxColorLabel.TextColor3
-
---// ESP Boxes
 local ESPBoxes = {}
 
---// Helper
+--// Functions
 local function isEnemy(p)
-    return p ~= player and p.Team ~= player.Team
+	return p~=player and p.Team ~= player.Team
 end
 
---// Create ESP Box
-local function createESPBox(p)
-    if ESPBoxes[p] then return end
-    local box = Drawing.new("Quad")
-    box.Color = ESPColor
-    box.Thickness = 2
-    box.Transparency = 0.5
-    ESPBoxes[p] = box
-end
-local function removeESPBox(p)
-    if ESPBoxes[p] then
-        ESPBoxes[p]:Remove()
-        ESPBoxes[p] = nil
-    end
+local function createESP(p)
+	if ESPBoxes[p] then return end
+	local box = Instance.new("BillboardGui")
+	box.Adornee = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+	box.Size = UDim2.new(0,50,0,50)
+	box.AlwaysOnTop = true
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,0,1,0)
+	frame.BackgroundTransparency = 0.5
+	frame.BackgroundColor3 = ESPColorLbl.TextColor3
+	frame.Parent = box
+	box.Parent = PlayerGui
+	ESPBoxes[p] = {box=box,frame=frame}
 end
 
---// Update ESP
-local function updateESP()
-    for p, box in pairs(ESPBoxes) do
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = p.Character.HumanoidRootPart
-            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-            if onScreen then
-                local size = Vector2.new(100,100)
-                local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
-                local bottomRight = topLeft + size
-                box.PointA = topLeft
-                box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
-                box.PointC = bottomRight
-                box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
-                box.Color = ESPColor
-                box.Visible = true
-            else
-                box.Visible = false
-            end
-        else
-            box.Visible = false
-        end
-    end
+local function removeESP(p)
+	if ESPBoxes[p] then
+		ESPBoxes[p].box:Destroy()
+		ESPBoxes[p] = nil
+	end
 end
 
 --// Button Events
-AimbotButton.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    AimbotButton.BackgroundColor3 = aimbotEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+AimbotBtn.MouseButton1Click:Connect(function()
+	aimbotEnabled = not aimbotEnabled
+	AimbotBtn.BackgroundColor3 = aimbotEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
 end)
-ESPButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    ESPButton.BackgroundColor3 = espEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
-    if espEnabled then
-        for _, p in pairs(Players:GetPlayers()) do if isEnemy(p) then createESPBox(p) end end
-    else
-        for p,_ in pairs(ESPBoxes) do removeESPBox(p) end
-    end
+ESPBtn.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	ESPBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+	if espEnabled then
+		for _,p in pairs(Players:GetPlayers()) do if isEnemy(p) then createESP(p) end end
+	else
+		for p,_ in pairs(ESPBoxes) do removeESP(p) end
+	end
 end)
-HitboxButton.MouseButton1Click:Connect(function()
-    hitboxEnabled = not hitboxEnabled
-    HitboxButton.BackgroundColor3 = hitboxEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+HitboxBtn.MouseButton1Click:Connect(function()
+	hitboxEnabled = not hitboxEnabled
+	HitboxBtn.BackgroundColor3 = hitboxEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
 end)
-FlyButton.MouseButton1Click:Connect(function()
-    flyEnabled = not flyEnabled
-    FlyButton.BackgroundColor3 = flyEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+FlyBtn.MouseButton1Click:Connect(function()
+	flyEnabled = not flyEnabled
+	FlyBtn.BackgroundColor3 = flyEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
 end)
-NoclipButton.MouseButton1Click:Connect(function()
-    noclipEnabled = not noclipEnabled
-    NoclipButton.BackgroundColor3 = noclipEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+NoclipBtn.MouseButton1Click:Connect(function()
+	noclipEnabled = not noclipEnabled
+	NoclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
 end)
-HeadTorsoButton.MouseButton1Click:Connect(function()
-    if aimPart == "Head" then
-        aimPart = "Torso"
-        HeadTorsoButton.Text = "Aimbot Part: Torso"
-    else
-        aimPart = "Head"
-        HeadTorsoButton.Text = "Aimbot Part: Head"
-    end
+HeadTorsoBtn.MouseButton1Click:Connect(function()
+	if aimPart=="Head" then aimPart="Torso" HeadTorsoBtn.Text="Aimbot Part: Torso"
+	else aimPart="Head" HeadTorsoBtn.Text="Aimbot Part: Head" end
 end)
 
---// Update sliders continuously
+--// Main Loop
 RunService.RenderStepped:Connect(function()
-    fov = FOVSlider.Value
-    hitboxSize = HitboxSizeSlider.Value
-    flySpeed = FlySpeedSlider.Value
-    ESPColor = ESPColorLabel.TextColor3
-    hitboxColor = HitboxColorLabel.TextColor3
+	local fov = FOVSlider.Value
+	local hitboxSize = HitboxSlider.Value
+	local flySpeed = FlySpeedSlider.Value
+
+	-- ESP
+	if espEnabled then
+		for p,_ in pairs(Players:GetPlayers()) do
+			if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+				if not ESPBoxes[p] then createESP(p) end
+				local frame = ESPBoxes[p].frame
+				frame.BackgroundColor3 = ESPColorLbl.TextColor3
+			end
+		end
+	end
+
+	-- Hitbox
+	if hitboxEnabled then
+		for _,p in pairs(Players:GetPlayers()) do
+			if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+				local hrp = p.Character.HumanoidRootPart
+				hrp.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
+				hrp.Transparency = 0.5
+				hrp.BrickColor = BrickColor.new(HitboxColorLbl.TextColor3)
+			end
+		end
+	end
+
+	-- Fly
+	if flyEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		local hrp = player.Character.HumanoidRootPart
+		local dir = Vector3.new()
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + hrp.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - hrp.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - hrp.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + hrp.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0,1,0) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then dir = dir - Vector3.new(0,1,0) end
+		if dir.Magnitude>0 then hrp.Velocity = dir.Unit*flySpeed else hrp.Velocity=Vector3.new() end
+	end
+
+	-- Aimbot (hold right click)
+	if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+		local closest
+		local shortest = fov
+		for _,p in pairs(Players:GetPlayers()) do
+			if isEnemy(p) and p.Character and p.Character:FindFirstChild(aimPart) then
+				local pos = Camera:WorldToViewportPoint(p.Character[aimPart].Position)
+				local dist = (Vector2.new(pos.X,pos.Y)-Vector2.new(mouse.X,mouse.Y)).Magnitude
+				if dist<shortest then shortest=dist closest=p end
+			end
+		end
+		if closest and closest.Character and closest.Character:FindFirstChild(aimPart) then
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position,closest.Character[aimPart].Position)
+		end
+	end
 end)
 
---// Render loop for aimbot, ESP, hitbox, fly
-RunService.RenderStepped:Connect(function()
-    -- ESP
-    if espEnabled then updateESP() end
-    -- Hitbox
-    if hitboxEnabled then
-        for _, p in pairs(Players:GetPlayers()) do
-            if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = p.Character.HumanoidRootPart
-                hrp.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
-                hrp.Transparency = 0.5
-                hrp.BrickColor = BrickColor.new(hitboxColor)
-            end
-        end
-    end
-    -- Fly
-    if flyEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local moveDir = Vector3.new()
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + hrp.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - hrp.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - hrp.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + hrp.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0,1,0) end
-        hrp.Velocity = moveDir.Unit * flySpeed
-    end
-    -- Aimbot
-    if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-        local closestPlayer
-        local shortestDistance = fov
-        local mouse = player:GetMouse()
-        for _, p in pairs(Players:GetPlayers()) do
-            if isEnemy(p) and p.Character and p.Character:FindFirstChild(aimPart) then
-                local pos = Camera:WorldToViewportPoint(p.Character[aimPart].Position)
-                local dist = (Vector2.new(pos.X,pos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude
-                if dist < shortestDistance then
-                    shortestDistance = dist
-                    closestPlayer = p
-                end
-            end
-        end
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild(aimPart) then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character[aimPart].Position)
-        end
-    end
-end)
-
--- Handle joining players
+--// Player added/removed
 Players.PlayerAdded:Connect(function(p)
-    if espEnabled and isEnemy(p) then createESPBox(p) end
+	if espEnabled and isEnemy(p) then createESP(p) end
 end)
 Players.PlayerRemoving:Connect(function(p)
-    removeESPBox(p)
+	removeESP(p)
 end)
