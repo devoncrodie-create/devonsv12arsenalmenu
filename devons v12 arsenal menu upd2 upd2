@@ -15,9 +15,9 @@ ScreenGui.Parent = PlayerGui
 
 --// Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 450, 0, 650)
-MainFrame.Position = UDim2.new(0.5, -225, 0.5, -325)
-MainFrame.BackgroundColor3 = Color3.fromRGB(35,35,40)
+MainFrame.Size = UDim2.new(0, 480, 0, 700)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -350)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40,40,45)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -25,7 +25,10 @@ MainFrame.Parent = ScreenGui
 
 -- Gradient
 local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(50,50,60)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,25))}
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(50,50,60)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(25,25,30))
+}
 gradient.Rotation = 45
 gradient.Parent = MainFrame
 
@@ -105,7 +108,7 @@ local function createSlider(name, min, max, yPos, default)
 	return lbl
 end
 
---// Helper: Color Picker (simple)
+--// Helper: Color Label
 local function createColorLabel(name, color, yPos)
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.new(0.8,0,0,25)
@@ -123,7 +126,7 @@ end
 local startY = 70
 local AimbotBtn = createButton("Aimbot", startY)
 local ESPBtn = createButton("ESP", startY+60)
-local HitboxBtn = createButton("Hitbox Extender", startY+120)
+local HitboxBtn = createButton("Hitbox Visual", startY+120)
 local FlyBtn = createButton("Fly", startY+180)
 local NoclipBtn = createButton("Noclip", startY+240)
 local HeadTorsoBtn = createButton("Aimbot Part: Head", startY+300)
@@ -137,6 +140,42 @@ local FlySpeedSlider = createSlider("Fly Speed",20,300,startY+480,50)
 local ESPColorLbl = createColorLabel("ESP Color",Color3.fromRGB(255,0,0),startY+540)
 local HitboxColorLbl = createColorLabel("Hitbox Color",Color3.fromRGB(255,0,0),startY+570)
 
+--// Menu toggle key
+local toggleKey = Enum.KeyCode.RightShift
+local menuVisible = true
+
+local KeybindLabel = Instance.new("TextLabel")
+KeybindLabel.Size = UDim2.new(0.8,0,0,25)
+KeybindLabel.Position = UDim2.new(0.1,0,0,650)
+KeybindLabel.BackgroundTransparency = 1
+KeybindLabel.Text = "Toggle Menu Key: "..tostring(toggleKey.Name)
+KeybindLabel.Font = Enum.Font.Gotham
+KeybindLabel.TextSize = 18
+KeybindLabel.TextColor3 = Color3.fromRGB(255,255,255)
+KeybindLabel.Parent = MainFrame
+
+KeybindLabel.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		KeybindLabel.Text = "Press a key..."
+		local conn
+		conn = UserInputService.InputBegan:Connect(function(key)
+			if key.UserInputType == Enum.UserInputType.Keyboard then
+				toggleKey = key.KeyCode
+				KeybindLabel.Text = "Toggle Menu Key: "..tostring(toggleKey.Name)
+				conn:Disconnect()
+			end
+		end)
+	end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == toggleKey then
+		MainFrame.Visible = not MainFrame.Visible
+		menuVisible = MainFrame.Visible
+	end
+end)
+
 --// States
 local aimbotEnabled, espEnabled, hitboxEnabled, flyEnabled, noclipEnabled = false,false,false,false,false
 local aimPart = "Head"
@@ -149,17 +188,19 @@ end
 
 local function createESP(p)
 	if ESPBoxes[p] then return end
-	local box = Instance.new("BillboardGui")
-	box.Adornee = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
-	box.Size = UDim2.new(0,50,0,50)
-	box.AlwaysOnTop = true
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1,0,1,0)
-	frame.BackgroundTransparency = 0.5
-	frame.BackgroundColor3 = ESPColorLbl.TextColor3
-	frame.Parent = box
-	box.Parent = PlayerGui
-	ESPBoxes[p] = {box=box,frame=frame}
+	if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+		local box = Instance.new("BillboardGui")
+		box.Adornee = p.Character.HumanoidRootPart
+		box.Size = UDim2.new(0,50,0,50)
+		box.AlwaysOnTop = true
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(1,0,1,0)
+		frame.BackgroundTransparency = 0.5
+		frame.BackgroundColor3 = ESPColorLbl.TextColor3
+		frame.Parent = box
+		box.Parent = PlayerGui
+		ESPBoxes[p] = {box=box,frame=frame}
+	end
 end
 
 local function removeESP(p)
@@ -200,24 +241,50 @@ HeadTorsoBtn.MouseButton1Click:Connect(function()
 	else aimPart="Head" HeadTorsoBtn.Text="Aimbot Part: Head" end
 end)
 
+--// FOV Circle
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Color = Color3.fromRGB(0,255,0)
+FOVCircle.Thickness = 2
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+FOVCircle.Radius = FOVSlider.Value
+
 --// Main Loop
 RunService.RenderStepped:Connect(function()
 	local fov = FOVSlider.Value
 	local hitboxSize = HitboxSlider.Value
 	local flySpeed = FlySpeedSlider.Value
 
+	-- FOV Circle
+	if aimbotEnabled then
+		FOVCircle.Radius = fov
+		FOVCircle.Position = Vector2.new(mouse.X, mouse.Y)
+		FOVCircle.Visible = true
+	else
+		FOVCircle.Visible = false
+	end
+
 	-- ESP
 	if espEnabled then
-		for p,_ in pairs(Players:GetPlayers()) do
+		for _,p in pairs(Players:GetPlayers()) do
 			if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
 				if not ESPBoxes[p] then createESP(p) end
-				local frame = ESPBoxes[p].frame
-				frame.BackgroundColor3 = ESPColorLbl.TextColor3
+				local hrp = p.Character.HumanoidRootPart
+				local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+				local box = ESPBoxes[p].frame
+				if onScreen then
+					box.Visible = true
+					box.Position = UDim2.new(0, pos.X-25, 0, pos.Y-50)
+					box.Size = UDim2.new(0, 50, 0, 50)
+					box.BackgroundColor3 = ESPColorLbl.TextColor3
+				else
+					box.Visible = false
+				end
 			end
 		end
 	end
 
-	-- Hitbox
+	-- Hitbox Visual
 	if hitboxEnabled then
 		for _,p in pairs(Players:GetPlayers()) do
 			if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -242,27 +309,16 @@ RunService.RenderStepped:Connect(function()
 		if dir.Magnitude>0 then hrp.Velocity = dir.Unit*flySpeed else hrp.Velocity=Vector3.new() end
 	end
 
-	-- Aimbot (hold right click)
-	if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-		local closest
-		local shortest = fov
-		for _,p in pairs(Players:GetPlayers()) do
-			if isEnemy(p) and p.Character and p.Character:FindFirstChild(aimPart) then
-				local pos = Camera:WorldToViewportPoint(p.Character[aimPart].Position)
-				local dist = (Vector2.new(pos.X,pos.Y)-Vector2.new(mouse.X,mouse.Y)).Magnitude
-				if dist<shortest then shortest=dist closest=p end
+	-- Noclip
+	if noclipEnabled and player.Character then
+		for _,part in pairs(player.Character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
 			end
-		end
-		if closest and closest.Character and closest.Character:FindFirstChild(aimPart) then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position,closest.Character[aimPart].Position)
 		end
 	end
 end)
 
---// Player added/removed
-Players.PlayerAdded:Connect(function(p)
-	if espEnabled and isEnemy(p) then createESP(p) end
-end)
-Players.PlayerRemoving:Connect(function(p)
-	removeESP(p)
-end)
+--// Player Added/Removed
+Players.PlayerAdded:Connect(function(p) if espEnabled and isEnemy(p) then createESP(p) end end)
+Players.PlayerRemoving:Connect(function(p) removeESP(p) end)
