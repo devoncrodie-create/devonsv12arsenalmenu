@@ -2,18 +2,19 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
+
+local player = Players.LocalPlayer
 
 --// ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DevonsArsenalMenu"
-ScreenGui.Parent = PlayerGui
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 --// Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 460, 0, 420)
-MainFrame.Position = UDim2.new(0.5, -230, 0.5, -210)
+MainFrame.Size = UDim2.new(0, 460, 0, 650)
+MainFrame.Position = UDim2.new(0.5, -230, 0.5, -325)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -23,10 +24,6 @@ MainFrame.Parent = ScreenGui
 local UICornerMain = Instance.new("UICorner")
 UICornerMain.CornerRadius = UDim.new(0, 12)
 UICornerMain.Parent = MainFrame
-
-local MainGradient = Instance.new("UIGradient")
-MainGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 35)), ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 60, 60))})
-MainGradient.Parent = MainFrame
 
 --// Header
 local Header = Instance.new("TextLabel")
@@ -43,6 +40,14 @@ Header.Parent = MainFrame
 local UICornerHeader = Instance.new("UICorner")
 UICornerHeader.CornerRadius = UDim.new(0, 12)
 UICornerHeader.Parent = Header
+
+--// Comethazine Image
+local HeaderImage = Instance.new("ImageLabel")
+HeaderImage.Size = UDim2.new(0, 40, 0, 40)
+HeaderImage.Position = UDim2.new(1, -50, 0, 10)
+HeaderImage.BackgroundTransparency = 1
+HeaderImage.Image = "rbxassetid://101455013322456"
+HeaderImage.Parent = Header
 
 --// Close Label
 local CloseLabel = Instance.new("TextLabel")
@@ -88,14 +93,19 @@ local AimbotButton = createButton("Aimbot", 80)
 local ESPButton = createButton("ESP", 150)
 local HitboxButton = createButton("Hitbox Extender", 220)
 local KillAllButton = createButton("Kill All", 290)
+local RapidFireButton = createButton("Rapid Fire", 360)
 
 --// Toggle States
 local aimbotEnabled = false
 local espEnabled = false
 local hitboxEnabled = false
 local killAllEnabled = false
+local rapidFireEnabled = false
 local hitboxSize = 5
+local aimbotFOV = 200
+local rapidFireDelay = 0.1
 local aimbotPart = "Head"
+local rapidFireLast = 0
 
 --// Update Button Colors
 local function updateButtonColor(btn,state)
@@ -130,10 +140,14 @@ KillAllButton.MouseButton1Click:Connect(function()
     killAllEnabled = not killAllEnabled
     updateButtonColor(KillAllButton, killAllEnabled)
 end)
+RapidFireButton.MouseButton1Click:Connect(function()
+    rapidFireEnabled = not rapidFireEnabled
+    updateButtonColor(RapidFireButton, rapidFireEnabled)
+end)
 
---// Utility Functions
+--// Utility
 local function isEnemy(plr)
-    return plr.Team ~= Players.LocalPlayer.Team
+    return plr.Team ~= player.Team
 end
 
 --// ESP Table
@@ -154,20 +168,82 @@ local function removeESP(plr)
     end
 end
 
+--// Slider Creator
+local function createSlider(name, yPos, min, max, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.8, 0, 0, 50)
+    frame.Position = UDim2.new(0.1, 0, 0, yPos)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.Parent = MainFrame
+
+    local UICornerSlider = Instance.new("UICorner")
+    UICornerSlider.CornerRadius = UDim.new(0, 8)
+    UICornerSlider.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name..": "..default
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local sliderBar = Instance.new("Frame")
+    sliderBar.Size = UDim2.new(1, -100, 0, 10)
+    sliderBar.Position = UDim2.new(0, 100, 0.5, -5)
+    sliderBar.BackgroundColor3 = Color3.fromRGB(150,150,150)
+    sliderBar.Parent = frame
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+    fill.BackgroundColor3 = Color3.fromRGB(0,200,0)
+    fill.Parent = sliderBar
+
+    local dragging = false
+    sliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+    sliderBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local mouseX = UserInputService:GetMouseLocation().X - sliderBar.AbsolutePosition.X
+            local percent = math.clamp(mouseX/sliderBar.AbsoluteSize.X, 0, 1)
+            local value = min + (max-min)*percent
+            fill.Size = UDim2.new(percent,0,1,0)
+            label.Text = name..": "..math.floor(value)
+            callback(value)
+        end
+    end)
+end
+
+--// Add Sliders
+createSlider("Hitbox Size", 430, 1, 15, hitboxSize, function(val) hitboxSize = val end)
+createSlider("Aimbot FOV", 490, 50, 500, 200, function(val) aimbotFOV = val end)
+createSlider("Rapid Fire Speed", 550, 0.01, 0.5, 0.1, function(val) rapidFireDelay = val end)
+
 --// Main Loop
 RunService.RenderStepped:Connect(function()
-    local mouse = Players.LocalPlayer:GetMouse()
+    local mouse = player:GetMouse()
 
     -- Aimbot
     if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local closest
         local shortest = math.huge
         for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(aimbotPart) then
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(aimbotPart) then
                 local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[aimbotPart].Position)
                 if onScreen then
                     local dist = (Vector2.new(mouse.X,mouse.Y) - Vector2.new(screenPos.X,screenPos.Y)).Magnitude
-                    if dist < shortest then
+                    if dist < math.min(shortest, aimbotFOV) then
                         shortest = dist
                         closest = plr
                     end
@@ -182,7 +258,7 @@ RunService.RenderStepped:Connect(function()
     -- Hitbox Extender
     if hitboxEnabled then
         for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character then
+            if plr ~= player and isEnemy(plr) and plr.Character then
                 for _,part in pairs(plr.Character:GetChildren()) do
                     if part:IsA("BasePart") then
                         part.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
@@ -196,7 +272,7 @@ RunService.RenderStepped:Connect(function()
     -- ESP
     if espEnabled then
         for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = plr.Character.HumanoidRootPart
                 local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
                 if onScreen then
@@ -222,15 +298,26 @@ RunService.RenderStepped:Connect(function()
     -- Kill All
     if killAllEnabled then
         for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = plr.Character.HumanoidRootPart
-                local direction = (hrp.Position - workspace.CurrentCamera.CFrame.Position).Unit
+                local direction = (hrp.Position - Camera.CFrame.Position).Unit
                 local newPos = hrp.Position - direction*3
-                Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(newPos)
-                local tool = Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(newPos)
+                local tool = player.Character:FindFirstChildOfClass("Tool")
                 if tool and tool:FindFirstChild("Handle") then
                     tool:Activate()
                 end
+            end
+        end
+    end
+
+    -- Rapid Fire
+    if rapidFireEnabled then
+        if not rapidFireLast or tick() - rapidFireLast >= rapidFireDelay then
+            rapidFireLast = tick()
+            local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
+            if tool and tool:FindFirstChild("Handle") then
+                tool:Activate()
             end
         end
     end
