@@ -1,172 +1,269 @@
 --// Services
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
 
---// UI Setup
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 300, 0, 400)
-MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+--// Create ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DevonsArsenalMenu"
+ScreenGui.Parent = PlayerGui
+
+--// Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 350, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "Devon's Arsenal (v12)"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+-- Gradient background
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(50,50,60)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,25))}
+gradient.Rotation = 45
+gradient.Parent = MainFrame
 
--- Helper function for buttons
-local function createButton(name, pos)
-	local btn = Instance.new("TextButton", MainFrame)
-	btn.Size = UDim2.new(0.9, 0, 0, 40)
-	btn.Position = UDim2.new(0.05, 0, 0, pos)
-	btn.Text = name.." [OFF]"
-	btn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
-	btn.TextColor3 = Color3.new(1,1,1)
-	return btn
+--// Title Label
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 50)
+TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Devons Arsenal (v12)"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 26
+TitleLabel.Parent = MainFrame
+
+--// Button creator
+local function createButton(name, yPos)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.8, 0, 0, 40)
+    button.Position = UDim2.new(0.1, 0, 0, yPos)
+    button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    button.BorderSizePixel = 0
+    button.Text = name
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 20
+    button.Parent = MainFrame
+    -- Hover effect
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180,0,0)}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(aimbotEnabled or hitboxEnabled or espEnabled and 0 or 150,0,0)}):Play()
+    end)
+    return button
 end
 
---// Buttons
-local AimbotBtn = createButton("Aimbot", 50)
-local TargetPartBtn = createButton("Target: Head", 100)
-local ESPBtn = createButton("ESP", 150)
-local HitboxBtn = createButton("Hitbox Extender", 200)
-local FlyBtn = createButton("Fly", 250)
-local NoclipBtn = createButton("Noclip", 300)
+--// Create buttons
+local aimbotButtonY = 70
+local AimbotButton = createButton("Aimbot", aimbotButtonY)
+local ESPButton = createButton("ESP", aimbotButtonY + 60)
+local HitboxExtenderButton = createButton("Hitbox Extender", aimbotButtonY + 120)
+local FlyButton = createButton("Fly", aimbotButtonY + 180)
+local NoclipButton = createButton("Noclip", aimbotButtonY + 240)
 
---// States
-local aimbotEnabled, espEnabled, hitboxEnabled, flyEnabled, noclipEnabled = false, false, false, false, false
-local targetPart = "Head"
-local flySpeed = 3
-local hitboxSize = Vector3.new(5, 5, 5)
-local hitboxColor = Color3.fromRGB(255, 0, 0)
-local espColor = Color3.fromRGB(0, 255, 0)
+--// Toggle states
+local aimbotEnabled = false
+local hitboxEnabled = false
+local espEnabled = false
+local flyEnabled = false
+local noclipEnabled = false
 
---// Toggle system
-local function toggle(btn, stateVar)
-	if not _G[stateVar] then
-		_G[stateVar] = true
-		btn.Text = btn.Text:gsub("%[OFF%]", "[ON]")
-		btn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-	else
-		_G[stateVar] = false
-		btn.Text = btn.Text:gsub("%[ON%]", "[OFF]")
-		btn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-	end
+--// Toggle helper
+local function updateButtonColor(button, state)
+    if state then
+        button.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    else
+        button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    end
 end
 
--- Aimbot logic
-local fov = 200
-local function getClosestTarget()
-	local closest, dist = nil, fov
-	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild(targetPart) and plr.Team ~= LocalPlayer.Team then
-			local part = plr.Character[targetPart]
-			local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-			if onScreen then
-				local mag = (Vector2.new(screenPos.X, screenPos.Y) - UserInputService:GetMouseLocation()).Magnitude
-				if mag < dist then
-					closest, dist = part, mag
-				end
-			end
-		end
-	end
-	return closest
+--// Aimbot Settings
+local aimPart = "Head" -- default head
+local fov = 100
+
+--// ESP
+local ESPBoxes = {}
+local ESPColor = Color3.fromRGB(255,0,0)
+local hitboxColor = Color3.fromRGB(255,0,0)
+local hitboxSize = 5
+
+--// Fly settings
+local flySpeed = 50
+local flying = false
+
+--// Function to check if player is enemy
+local function isEnemy(p)
+    return p ~= player and p.Team ~= player.Team
 end
 
-RunService.RenderStepped:Connect(function()
-	if _G["aimbotEnabled"] and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-		local target = getClosestTarget()
-		if target then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-		end
-	end
-end)
+--// Create ESP Box
+local function createESPBox(p)
+    if ESPBoxes[p] then return end
+    local box = Drawing.new("Quad")
+    box.Color = ESPColor
+    box.Thickness = 2
+    box.Transparency = 0.5
+    ESPBoxes[p] = box
+end
 
--- ESP logic
-local espCache = {}
-RunService.RenderStepped:Connect(function()
-	if _G["espEnabled"] then
-		for _,plr in pairs(Players:GetPlayers()) do
-			if plr ~= LocalPlayer and plr.Character and plr.Team ~= LocalPlayer.Team then
-				local head = plr.Character:FindFirstChild("Head")
-				if head then
-					local box = espCache[plr] or Drawing.new("Box")
-					box.Visible = true
-					box.Color = espColor
-					local pos, vis = Camera:WorldToViewportPoint(head.Position)
-					if vis then
-						box.Position = Vector2.new(pos.X-25,pos.Y-50)
-						box.Size = Vector2.new(50,100)
-					else
-						box.Visible = false
-					end
-					espCache[plr] = box
-				end
-			end
-		end
-	else
-		for _,box in pairs(espCache) do
-			box.Visible = false
-		end
-	end
-end)
+local function removeESPBox(p)
+    if ESPBoxes[p] then
+        ESPBoxes[p]:Remove()
+        ESPBoxes[p] = nil
+    end
+end
 
--- Hitbox extender
-RunService.Stepped:Connect(function()
-	if _G["hitboxEnabled"] then
-		for _,plr in pairs(Players:GetPlayers()) do
-			if plr ~= LocalPlayer and plr.Character and plr.Team ~= LocalPlayer.Team then
-				local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					hrp.Size = hitboxSize
-					hrp.BrickColor = BrickColor.new(hitboxColor)
-					hrp.Transparency = 0.5
-					hrp.CanCollide = false
-				end
-			end
-		end
-	end
-end)
+--// Update ESP positions
+local function updateESP()
+    for p, box in pairs(ESPBoxes) do
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = p.Character.HumanoidRootPart
+            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            if onScreen then
+                local size = Vector2.new(100,100)
+                local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
+                local bottomRight = topLeft + size
+                box.PointA = topLeft
+                box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
+                box.PointC = bottomRight
+                box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
+                box.Color = ESPColor
+                box.Visible = true
+            else
+                box.Visible = false
+            end
+        else
+            box.Visible = false
+        end
+    end
+end
 
--- Fly + Noclip
+--// Fly function
 local function fly()
-	local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-	local hrp = char:WaitForChild("HumanoidRootPart")
-	RunService.RenderStepped:Connect(function()
-		if _G["flyEnabled"] then
-			local move = Vector3.zero
-			if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += Camera.CFrame.LookVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= Camera.CFrame.LookVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= Camera.CFrame.RightVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += Camera.CFrame.RightVector end
-			hrp.Velocity = move * flySpeed * 10
-		end
-		if _G["noclipEnabled"] then
-			for _,part in pairs(char:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.CanCollide = false
-				end
-			end
-		end
-	end)
+    flying = true
+    local bodyVel = Instance.new("BodyVelocity")
+    bodyVel.MaxForce = Vector3.new(400000,400000,400000)
+    bodyVel.Velocity = Vector3.new(0,0,0)
+    bodyVel.Parent = player.Character.HumanoidRootPart
+    RunService.RenderStepped:Connect(function()
+        if flying and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local moveDir = Vector3.new()
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + hrp.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - hrp.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - hrp.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + hrp.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0,1,0) end
+            bodyVel.Velocity = moveDir.Unit * flySpeed
+        else
+            bodyVel.Velocity = Vector3.new(0,0,0)
+        end
+    end)
 end
-fly()
 
--- Button Connections
-AimbotBtn.MouseButton1Click:Connect(function() toggle(AimbotBtn,"aimbotEnabled") end)
-TargetPartBtn.MouseButton1Click:Connect(function()
-	targetPart = (targetPart == "Head" and "HumanoidRootPart" or "Head")
-	TargetPartBtn.Text = "Target: "..(targetPart == "Head" and "Head" or "Torso")
+--// Noclip function
+local function noclip()
+    noclipEnabled = not noclipEnabled
+    RunService.Stepped:Connect(function()
+        if noclipEnabled and player.Character then
+            for _, part in pairs(player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+--// Button Events
+AimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    updateButtonColor(AimbotButton, aimbotEnabled)
 end)
-ESPBtn.MouseButton1Click:Connect(function() toggle(ESPBtn,"espEnabled") end)
-HitboxBtn.MouseButton1Click:Connect(function() toggle(HitboxBtn,"hitboxEnabled") end)
-FlyBtn.MouseButton1Click:Connect(function() toggle(FlyBtn,"flyEnabled") end)
-NoclipBtn.MouseButton1Click:Connect(function() toggle(NoclipBtn,"noclipEnabled") end)
 
-print("Menu Loaded ✅")
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    updateButtonColor(ESPButton, espEnabled)
+    if espEnabled then
+        for _, p in pairs(Players:GetPlayers()) do
+            if isEnemy(p) then createESPBox(p) end
+        end
+    else
+        for p, _ in pairs(ESPBoxes) do
+            removeESPBox(p)
+        end
+    end
+end)
+
+HitboxExtenderButton.MouseButton1Click:Connect(function()
+    hitboxEnabled = not hitboxEnabled
+    updateButtonColor(HitboxExtenderButton, hitboxEnabled)
+end)
+
+FlyButton.MouseButton1Click:Connect(function()
+    flyEnabled = not flyEnabled
+    updateButtonColor(FlyButton, flyEnabled)
+    if flyEnabled then fly() end
+end)
+
+NoclipButton.MouseButton1Click:Connect(function()
+    noclip()
+    updateButtonColor(NoclipButton, noclipEnabled)
+end)
+
+--// Main Render Loop
+RunService.RenderStepped:Connect(function()
+    -- ESP
+    if espEnabled then updateESP() end
+
+    -- Hitbox Extender
+    if hitboxEnabled then
+        for _, p in pairs(Players:GetPlayers()) do
+            if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                hrp.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                hrp.Transparency = 0.5
+                hrp.BrickColor = BrickColor.new(hitboxColor)
+            end
+        end
+    end
+
+    -- Aimbot (basic)
+    if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local closestPlayer
+        local shortestDistance = fov
+        local mouse = player:GetMouse()
+        for _, p in pairs(Players:GetPlayers()) do
+            if isEnemy(p) and p.Character and p.Character:FindFirstChild(aimPart) then
+                local pos = Camera:WorldToViewportPoint(p.Character[aimPart].Position)
+                local dist = (Vector2.new(pos.X,pos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    closestPlayer = p
+                end
+            end
+        end
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild(aimPart) then
+            local target = closestPlayer.Character[aimPart]
+            local cf = CFrame.new(Camera.CFrame.Position, target.Position)
+            Camera.CFrame = cf
+        end
+    end
+end)
+
+-- Handle joining players for ESP
+Players.PlayerAdded:Connect(function(p)
+    if espEnabled and isEnemy(p) then createESPBox(p) end
+end)
+Players.PlayerRemoving:Connect(function(p)
+    removeESPBox(p)
+end)
