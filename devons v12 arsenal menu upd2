@@ -3,98 +3,92 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
-local PlayerGui = player:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
 
---// Create ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
+--// GUI Setup
+local PlayerGui = player:WaitForChild("PlayerGui")
+local ScreenGui = Instance.new("ScreenGui", PlayerGui)
 ScreenGui.Name = "DevonsArsenalMenu"
-ScreenGui.Parent = PlayerGui
 
---// Main Frame
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 250)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 300, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
 
---// Title Label
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 50)
-TitleLabel.Position = UDim2.new(0, 0, 0, 0)
-TitleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-TitleLabel.BorderSizePixel = 0
+local TitleLabel = Instance.new("TextLabel", MainFrame)
+TitleLabel.Size = UDim2.new(1,0,0,50)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(35,35,35)
 TitleLabel.Text = "Devons Arsenal (v12)"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 24
-TitleLabel.Parent = MainFrame
 
---// Button creator
-local function createButton(name, yPos)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.8, 0, 0, 40)
-    button.Position = UDim2.new(0.1, 0, 0, yPos)
-    button.BackgroundColor3 = Color3.fromRGB(150, 0, 0) -- off = red
-    button.BorderSizePixel = 0
-    button.Text = name
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 20
-    button.Parent = MainFrame
-    return button
+--// Helper for buttons
+local function createButton(name, y)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0.8,0,0,40)
+    btn.Position = UDim2.new(0.1,0,0,y)
+    btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    btn.BorderSizePixel = 0
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 20
+    return btn
 end
 
---// Create buttons
 local AimbotButton = createButton("Aimbot", 60)
 local ESPButton = createButton("ESP", 110)
-local HitboxExtenderButton = createButton("Hitbox Extender", 160)
+local HitboxButton = createButton("Hitbox Extender", 160)
 
---// Toggle states
+--// Toggles
 local aimbotEnabled = false
-local hitboxEnabled = false
 local espEnabled = false
+local hitboxEnabled = false
+local rightClickDown = false
 
---// Update button color based on toggle
-local function updateButtonColor(button, state)
-    if state then
-        button.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- green
-    else
-        button.BackgroundColor3 = Color3.fromRGB(150, 0, 0) -- red
-    end
-end
+--// Colors
+local ESPColor = Color3.fromRGB(255,0,0)
+local HitboxColor = Color3.fromRGB(0,1,0)
+local HitboxTransparency = 0.5
+
+--// Aimbot FOV
+local FOVRadius = 100
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Radius = FOVRadius
+FOVCircle.Color = Color3.fromRGB(0,255,0)
+FOVCircle.Thickness = 1
+FOVCircle.Visible = true
+FOVCircle.Filled = false
 
 --// Team check
-local function isSameTeam(otherPlayer)
-    return otherPlayer.Team == player.Team
+local function isEnemy(p)
+    return p ~= player and p.Team ~= player.Team
 end
 
---// ESP table
+--// ESP
 local ESPBoxes = {}
-
-local function createESPBox(target)
+local function createESPBox(p)
+    if ESPBoxes[p] then return end
     local box = Drawing.new("Quad")
-    box.Color = Color3.fromRGB(255,0,0)
+    box.Color = ESPColor
     box.Thickness = 2
     box.Transparency = 0.5
-    box.Visible = false
-    ESPBoxes[target] = box
+    box.Visible = true
+    ESPBoxes[p] = box
 end
-
-local function removeESPBox(target)
-    if ESPBoxes[target] then
-        ESPBoxes[target]:Remove()
-        ESPBoxes[target] = nil
+local function removeESPBox(p)
+    if ESPBoxes[p] then
+        ESPBoxes[p]:Remove()
+        ESPBoxes[p] = nil
     end
 end
-
 local function updateESP()
     for p, box in pairs(ESPBoxes) do
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = p.Character.HumanoidRootPart
+        local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
             local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             if onScreen then
                 local size = Vector2.new(100,100)
@@ -104,6 +98,7 @@ local function updateESP()
                 box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
                 box.PointC = bottomRight
                 box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
+                box.Color = ESPColor
                 box.Visible = true
             else
                 box.Visible = false
@@ -114,86 +109,83 @@ local function updateESP()
     end
 end
 
---// Button events
+--// Button Events
 AimbotButton.MouseButton1Click:Connect(function()
     aimbotEnabled = not aimbotEnabled
-    updateButtonColor(AimbotButton, aimbotEnabled)
+    AimbotButton.BackgroundColor3 = aimbotEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
 end)
-
-HitboxExtenderButton.MouseButton1Click:Connect(function()
-    hitboxEnabled = not hitboxEnabled
-    updateButtonColor(HitboxExtenderButton, hitboxEnabled)
-end)
-
 ESPButton.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
-    updateButtonColor(ESPButton, espEnabled)
+    ESPButton.BackgroundColor3 = espEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
     if espEnabled then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player and not isSameTeam(p) then
-                createESPBox(p)
-            end
-        end
+        for _, p in pairs(Players:GetPlayers()) do if isEnemy(p) then createESPBox(p) end end
     else
-        for p, _ in pairs(ESPBoxes) do
-            removeESPBox(p)
-        end
+        for p,_ in pairs(ESPBoxes) do removeESPBox(p) end
+    end
+end)
+HitboxButton.MouseButton1Click:Connect(function()
+    hitboxEnabled = not hitboxEnabled
+    HitboxButton.BackgroundColor3 = hitboxEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+end)
+
+--// Right click detection
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightClickDown = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightClickDown = false
     end
 end)
 
 --// Main loop
 RunService.RenderStepped:Connect(function()
+    -- Update FOV circle
+    local mouse = player:GetMouse()
+    FOVCircle.Position = Vector2.new(mouse.X, mouse.Y)
+
     -- Aimbot
-    if aimbotEnabled then
-        local closestPlayer
-        local shortestDistance = math.huge
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= player and not isSameTeam(otherPlayer) and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = otherPlayer.Character.HumanoidRootPart
+    if aimbotEnabled and rightClickDown then
+        local closest
+        local shortest = FOVRadius
+        for _, p in pairs(Players:GetPlayers()) do
+            if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
                 local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
                 if onScreen then
-                    local mouse = player:GetMouse()
-                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
-                    if distance < shortestDistance then
-                        shortestDistance = distance
-                        closestPlayer = otherPlayer
-                    end
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+                    if dist < shortest then shortest = dist; closest = p end
                 end
             end
         end
-
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local target = closestPlayer.Character.HumanoidRootPart
-            -- TODO: Replace with actual aiming code
+        if closest and closest.Character and closest.Character:FindFirstChild("HumanoidRootPart") then
+            -- Smoothly move mouse to target
+            local targetPos = Camera:WorldToViewportPoint(closest.Character.HumanoidRootPart.Position)
+            mousemoverel((targetPos.X - mouse.X)*0.2, (targetPos.Y - mouse.Y)*0.2)
         end
     end
 
     -- Hitbox Extender
     if hitboxEnabled then
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= player and not isSameTeam(otherPlayer) and otherPlayer.Character then
-                local hrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    hrp.Size = Vector3.new(10,10,10)
-                    hrp.Transparency = 0.5
+        for _, p in pairs(Players:GetPlayers()) do
+            if isEnemy(p) and p.Character then
+                for _, part in pairs(p.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Size = Vector3.new(10,10,10)
+                        part.Transparency = HitboxTransparency
+                        part.Color = HitboxColor
+                    end
                 end
             end
         end
     end
 
     -- ESP Update
-    if espEnabled then
-        updateESP()
-    end
+    if espEnabled then updateESP() end
 end)
 
---// Handle players joining/leaving for ESP
-Players.PlayerAdded:Connect(function(p)
-    if espEnabled and p ~= player and not isSameTeam(p) then
-        createESPBox(p)
-    end
-end)
-
-Players.PlayerRemoving:Connect(function(p)
-    removeESPBox(p)
-end)
+--// Player join/leave
+Players.PlayerAdded:Connect(function(p) if espEnabled and isEnemy(p) then createESPBox(p) end end)
+Players.PlayerRemoving:Connect(function(p) removeESPBox(p) end)
