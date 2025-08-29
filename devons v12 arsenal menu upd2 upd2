@@ -12,8 +12,8 @@ ScreenGui.Parent = PlayerGui
 
 --// Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 450, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
+MainFrame.Size = UDim2.new(0, 450, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -200)
 MainFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -62,16 +62,15 @@ end
 local AimbotButton = createButton("Aimbot", 60)
 local ESPButton = createButton("ESP", 120)
 local HitboxButton = createButton("Hitbox Extender", 180)
+local KillAllButton = createButton("Kill All", 240)
 
 --// Toggle States
 local aimbotEnabled = false
 local espEnabled = false
 local hitboxEnabled = false
+local killAllEnabled = false
 local hitboxSize = 5
 local aimbotPart = "Head"
-local flyEnabled = false
-local flySpeed = 50
-local noclipEnabled = false
 
 --// Update Button Colors
 local function updateButtonColor(btn,state)
@@ -105,6 +104,11 @@ HitboxButton.MouseButton1Click:Connect(function()
     updateButtonColor(HitboxButton, hitboxEnabled)
 end)
 
+KillAllButton.MouseButton1Click:Connect(function()
+    killAllEnabled = not killAllEnabled
+    updateButtonColor(KillAllButton, killAllEnabled)
+end)
+
 --// Utility Functions
 local function isEnemy(plr)
     return plr.Team ~= Players.LocalPlayer.Team
@@ -112,7 +116,6 @@ end
 
 --// ESP Table
 local ESPBoxes = {}
-
 local function createESP(plr)
     if ESPBoxes[plr] then return end
     local box = Drawing.new("Quad")
@@ -122,7 +125,6 @@ local function createESP(plr)
     box.Visible = true
     ESPBoxes[plr] = box
 end
-
 local function removeESP(plr)
     if ESPBoxes[plr] then
         ESPBoxes[plr]:Remove()
@@ -133,8 +135,8 @@ end
 --// Main Loop
 RunService.RenderStepped:Connect(function()
     local mouse = Players.LocalPlayer:GetMouse()
-    
-    -- Aimbot
+
+    -- Aimbot (locks while right click)
     if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local closest
         local shortest = math.huge
@@ -169,7 +171,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP Update
+    -- ESP
     if espEnabled then
         for _,plr in pairs(Players:GetPlayers()) do
             if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -191,6 +193,25 @@ RunService.RenderStepped:Connect(function()
                 end
             else
                 removeESP(plr)
+            end
+        end
+    end
+
+    -- Kill All
+    if killAllEnabled then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= Players.LocalPlayer and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                -- Teleport behind enemy
+                local direction = (hrp.Position - workspace.CurrentCamera.CFrame.Position).Unit
+                local newPos = hrp.Position - direction*3
+                Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(newPos)
+
+                -- Trigger bot (fire tool if equipped)
+                local tool = Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                if tool and tool:FindFirstChild("Handle") then
+                    tool:Activate()
+                end
             end
         end
     end
