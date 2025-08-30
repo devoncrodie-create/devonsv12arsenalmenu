@@ -10,6 +10,7 @@ local player = Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DevonsArsenalMenu"
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
 
 --// Main Frame
 local MainFrame = Instance.new("Frame")
@@ -21,26 +22,43 @@ MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 
 local UICornerMain = Instance.new("UICorner")
-UICornerMain.CornerRadius = UDim.new(0, 12)
+UICornerMain.CornerRadius = UDim.new(0, 16)
 UICornerMain.Parent = MainFrame
 
+--// Shadow Effect
+local Shadow = Instance.new("UIStroke")
+Shadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Shadow.Color = Color3.fromRGB(0,0,0)
+Shadow.Thickness = 2
+Shadow.Transparency = 0.7
+Shadow.Parent = MainFrame
+
 --// Header
-local Header = Instance.new("TextLabel")
+local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1,0,0,60)
 Header.Position = UDim2.new(0,0,0,0)
-Header.BackgroundColor3 = Color3.fromRGB(55,55,55)
+Header.BackgroundColor3 = Color3.fromRGB(50,50,50)
 Header.BorderSizePixel = 0
-Header.Text = "Devons Arsenal Menu (v12)"
-Header.TextColor3 = Color3.fromRGB(255,255,255)
-Header.Font = Enum.Font.GothamBold
-Header.TextSize = 26
 Header.Parent = MainFrame
 
+local HeaderGradient = Instance.new("UIGradient")
+HeaderGradient.Color = ColorSequence.new(Color3.fromRGB(50,50,50), Color3.fromRGB(70,70,70))
+HeaderGradient.Parent = Header
+
+local HeaderLabel = Instance.new("TextLabel")
+HeaderLabel.Size = UDim2.new(1,0,1,0)
+HeaderLabel.BackgroundTransparency = 1
+HeaderLabel.Text = "Devons Arsenal Menu (v12)"
+HeaderLabel.TextColor3 = Color3.fromRGB(255,255,255)
+HeaderLabel.Font = Enum.Font.GothamBold
+HeaderLabel.TextSize = 26
+HeaderLabel.Parent = Header
+
 local UICornerHeader = Instance.new("UICorner")
-UICornerHeader.CornerRadius = UDim.new(0, 12)
+UICornerHeader.CornerRadius = UDim.new(0, 16)
 UICornerHeader.Parent = Header
 
---// Comethazine Image
+--// Header Image
 local HeaderImage = Instance.new("ImageLabel")
 HeaderImage.Size = UDim2.new(0, 40, 0, 40)
 HeaderImage.Position = UDim2.new(1, -50, 0, 10)
@@ -59,12 +77,26 @@ CloseLabel.Font = Enum.Font.Gotham
 CloseLabel.TextSize = 16
 CloseLabel.Parent = MainFrame
 
---// Buttons
+--// Toggle States
+local aimbotEnabled, espEnabled, hitboxEnabled, killAllEnabled, rapidFireEnabled = false, false, false, false, false
+local hitboxSize, aimbotFOV, rapidFireDelay = 5, 200, 0.1
+local aimbotPart = "Head"
+local rapidFireLast = 0
+
+--// Button Functions
+local function updateButtonColor(btn,state)
+    if state then
+        btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+    else
+        btn.BackgroundColor3 = Color3.fromRGB(180,0,0)
+    end
+end
+
 local function createButton(name, yPos)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.8,0,0,45)
     btn.Position = UDim2.new(0.1,0,0,yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,0,0)
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -73,55 +105,28 @@ local function createButton(name, yPos)
     btn.Parent = MainFrame
 
     local UICornerBtn = Instance.new("UICorner")
-    UICornerBtn.CornerRadius = UDim.new(0, 8)
+    UICornerBtn.CornerRadius = UDim.new(0, 10)
     UICornerBtn.Parent = btn
 
     btn.MouseEnter:Connect(function()
-        btn.BackgroundColor3 = btn.BackgroundColor3:Lerp(Color3.fromRGB(200,50,50),0.3)
+        btn:TweenSizeAndPosition(UDim2.new(0.82,0,0,50), btn.Position, "Out", "Quad", 0.2, true)
+        btn.BackgroundColor3 = Color3.fromRGB(220,50,50)
     end)
     btn.MouseLeave:Connect(function()
-        if btn.BackgroundColor3 ~= Color3.fromRGB(0,200,0) then
-            btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
-        end
+        btn:TweenSizeAndPosition(UDim2.new(0.8,0,0,45), btn.Position, "Out", "Quad", 0.2, true)
+        updateButtonColor(btn, btn.BackgroundColor3 == Color3.fromRGB(0,200,0))
     end)
+
     return btn
 end
 
+--// Buttons
 local AimbotButton = createButton("Aimbot", 80)
 local ESPButton = createButton("ESP", 150)
 local HitboxButton = createButton("Hitbox Extender", 220)
 local KillAllButton = createButton("Kill All", 290)
 local RapidFireButton = createButton("Rapid Fire", 360)
 
---// Toggle States
-local aimbotEnabled = false
-local espEnabled = false
-local hitboxEnabled = false
-local killAllEnabled = false
-local rapidFireEnabled = false
-local hitboxSize = 5
-local aimbotFOV = 200
-local rapidFireDelay = 0.1
-local aimbotPart = "Head"
-local rapidFireLast = 0
-
---// Update Button Colors
-local function updateButtonColor(btn,state)
-    if state then
-        btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
-    else
-        btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
-    end
-end
-
---// Close Menu Keybind
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightControl then
-        ScreenGui.Enabled = not ScreenGui.Enabled
-    end
-end)
-
---// Button Events
 AimbotButton.MouseButton1Click:Connect(function()
     aimbotEnabled = not aimbotEnabled
     updateButtonColor(AimbotButton, aimbotEnabled)
@@ -172,18 +177,18 @@ end)
 --// Slider Creator
 local function createSlider(name, yPos, min, max, default, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.8, 0, 0, 50)
-    frame.Position = UDim2.new(0.1, 0, 0, yPos)
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.Size = UDim2.new(0.8,0,0,40)
+    frame.Position = UDim2.new(0.1,0,0,yPos)
+    frame.BackgroundColor3 = Color3.fromRGB(60,60,60)
     frame.Parent = MainFrame
 
     local UICornerSlider = Instance.new("UICorner")
-    UICornerSlider.CornerRadius = UDim.new(0, 8)
+    UICornerSlider.CornerRadius = UDim.new(0,8)
     UICornerSlider.Parent = frame
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.6, 0, 1, 0)
-    label.Position = UDim2.new(0, 0, 0, 0)
+    label.Size = UDim2.new(0.6,0,1,0)
+    label.Position = UDim2.new(0,0,0,0)
     label.BackgroundTransparency = 1
     label.Text = name..": "..default
     label.TextColor3 = Color3.fromRGB(255,255,255)
@@ -194,7 +199,7 @@ local function createSlider(name, yPos, min, max, default, callback)
 
     local sliderBar = Instance.new("Frame")
     sliderBar.Size = UDim2.new(1, -100, 0, 10)
-    sliderBar.Position = UDim2.new(0, 100, 0.5, -5)
+    sliderBar.Position = UDim2.new(0,100,0.5,-5)
     sliderBar.BackgroundColor3 = Color3.fromRGB(150,150,150)
     sliderBar.Parent = frame
 
@@ -228,8 +233,50 @@ end
 
 --// Add Sliders
 createSlider("Hitbox Size", 430, 1, 15, hitboxSize, function(val) hitboxSize = val end)
-createSlider("Aimbot FOV", 490, 50, 500, 200, function(val) aimbotFOV = val end)
-createSlider("Rapid Fire Speed", 550, 0.01, 0.5, 0.1, function(val) rapidFireDelay = val end)
+createSlider("Aimbot FOV", 490, 50, 500, aimbotFOV, function(val) aimbotFOV = val end)
+createSlider("Rapid Fire Speed", 550, 0.01, 0.5, rapidFireDelay, function(val) rapidFireDelay = val end)
+
+--// Close Menu Keybind
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+    end
+end)
+
+--// Header Drag
+local dragging = false
+local dragInput, mousePos, framePos
+
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = UserInputService:GetMouseLocation()
+        framePos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = UserInputService:GetMouseLocation() - mousePos
+        MainFrame.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+end)
 
 --// ESP Table
 local ESPBoxes = {}
@@ -248,7 +295,6 @@ local function removeESP(plr)
         ESPBoxes[plr] = nil
     end
 end
-
 local function isEnemy(plr)
     return plr.Team ~= player.Team
 end
@@ -289,39 +335,77 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP
-    if espEnabled then
-        for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+    --// ESP Table
+local ESPBoxes = {}
+
+local function createESP(plr)
+    if ESPBoxes[plr] then return end
+    local box = Drawing.new("Quad")
+    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Thickness = 2
+    box.Transparency = 1
+    box.Visible = true
+    ESPBoxes[plr] = box
+end
+
+local function removeESP(plr)
+    if ESPBoxes[plr] then
+        ESPBoxes[plr]:Remove()
+        ESPBoxes[plr] = nil
+    end
+end
+
+local function isEnemy(plr)
+    return plr.Team ~= player.Team
+end
+
+--// Update ESP
+RunService.RenderStepped:Connect(function()
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if espEnabled and isEnemy(plr) then
                 createESP(plr)
                 local hrp = plr.Character.HumanoidRootPart
-                local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                if onScreen then
-                    local size = Vector2.new(100,100)
-                    local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
-                    local bottomRight = topLeft + size
-                    local box = ESPBoxes[plr]
-                    box.PointA = topLeft
-                    box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
-                    box.PointC = bottomRight
-                    box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
-                    box.Visible = true
-                else
-                    ESPBoxes[plr].Visible = false
+
+                -- Get head and root positions to scale box
+                local head = plr.Character:FindFirstChild("Head")
+                if head then
+                    local topPos, onScreenTop = Camera:WorldToViewportPoint(head.Position + Vector3.new(0,0.5,0))
+                    local bottomPos, onScreenBottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0,1,0))
+                    if onScreenTop or onScreenBottom then
+                        local sizeY = math.abs(topPos.Y - bottomPos.Y)
+                        local sizeX = sizeY/2 -- box width proportional to height
+                        local topLeft = Vector2.new(topPos.X - sizeX/2, topPos.Y)
+                        local topRight = Vector2.new(topPos.X + sizeX/2, topPos.Y)
+                        local bottomLeft = Vector2.new(bottomPos.X - sizeX/2, bottomPos.Y)
+                        local bottomRight = Vector2.new(bottomPos.X + sizeX/2, bottomPos.Y)
+
+                        local box = ESPBoxes[plr]
+                        box.PointA = topLeft
+                        box.PointB = topRight
+                        box.PointC = bottomRight
+                        box.PointD = bottomLeft
+                        box.Visible = true
+                    else
+                        ESPBoxes[plr].Visible = false
+                    end
                 end
+            else
+                removeESP(plr)
             end
+        else
+            removeESP(plr)
         end
     end
+end)
 
     -- Kill All
     if killAllEnabled then
         for _,plr in pairs(Players:GetPlayers()) do
             if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
-                -- Fire tool click (simulate shooting)
                 if player.Character:FindFirstChildOfClass("Tool") then
-                    local tool = player.Character:FindFirstChildOfClass("Tool")
-                    tool:Activate()
+                    player.Character:FindFirstChildOfClass("Tool"):Activate()
                 end
             end
         end
@@ -333,40 +417,5 @@ RunService.RenderStepped:Connect(function()
         if player.Character:FindFirstChildOfClass("Tool") then
             player.Character:FindFirstChildOfClass("Tool"):Activate()
         end
-    end
-end)
-
---// Header Drag
-local dragging = false
-local dragInput, mousePos, framePos
-
-Header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        mousePos = UserInputService:GetMouseLocation()
-        framePos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-Header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = UserInputService:GetMouseLocation() - mousePos
-        MainFrame.Position = UDim2.new(
-            framePos.X.Scale,
-            framePos.X.Offset + delta.X,
-            framePos.Y.Scale,
-            framePos.Y.Offset + delta.Y
-        )
     end
 end)
