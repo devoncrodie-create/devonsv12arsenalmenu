@@ -43,7 +43,7 @@ local keyLabel = Instance.new("TextLabel")
 keyLabel.Size = UDim2.new(1,0,0,50)
 keyLabel.Position = UDim2.new(0,0,0,10)
 keyLabel.Text = "Enter Key to Access Menu"
-keyLabel.TextColor3 = Color3.fromRGB(255,165,0) -- bright orange
+keyLabel.TextColor3 = Color3.fromRGB(255,165,0)
 keyLabel.Font = Enum.Font.GothamBold
 keyLabel.TextSize = 24
 keyLabel.BackgroundTransparency = 1
@@ -66,7 +66,7 @@ enterButton.Size = UDim2.new(0.5,0,0,40)
 enterButton.Position = UDim2.new(0.25,0,0,140)
 enterButton.Text = "Enter"
 enterButton.TextColor3 = Color3.fromRGB(255,255,255)
-enterButton.BackgroundColor3 = Color3.fromRGB(150,0,0) -- dark red off
+enterButton.BackgroundColor3 = Color3.fromRGB(150,0,0)
 enterButton.Font = Enum.Font.GothamBold
 enterButton.TextSize = 22
 enterButton.Parent = keyFrame
@@ -81,7 +81,7 @@ local function loadMenu()
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0,460,0,650)
     MainFrame.Position = UDim2.new(0.5,-230,0.5,-325)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20,20,20) -- dark black
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
     MainFrame.Parent = ScreenGui
@@ -94,7 +94,7 @@ local function loadMenu()
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1,0,0,60)
     Header.Position = UDim2.new(0,0,0,0)
-    Header.BackgroundColor3 = Color3.fromRGB(255,140,0) -- bright orange
+    Header.BackgroundColor3 = Color3.fromRGB(255,140,0)
     Header.BorderSizePixel = 0
     Header.Parent = MainFrame
 
@@ -102,8 +102,8 @@ local function loadMenu()
     HeaderTitle.Size = UDim2.new(1,0,1,0)
     HeaderTitle.Position = UDim2.new(0,0,0,0)
     HeaderTitle.BackgroundTransparency = 1
-    HeaderTitle.Text = "Devons Arsenal Menu (v16)"
-    HeaderTitle.TextColor3 = Color3.fromRGB(255,165,0) -- bright orange
+    HeaderTitle.Text = "Devons Arsenal Menu (v17)"
+    HeaderTitle.TextColor3 = Color3.fromRGB(255,165,0)
     HeaderTitle.Font = Enum.Font.GothamBold
     HeaderTitle.TextSize = 26
     HeaderTitle.Parent = Header
@@ -120,7 +120,7 @@ local function loadMenu()
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(0.8,0,0,45)
         btn.Position = UDim2.new(0.1,0,0,yPos)
-        btn.BackgroundColor3 = MenuState[stateKey] and Color3.fromRGB(255,0,0) or Color3.fromRGB(150,0,0) -- red on/off
+        btn.BackgroundColor3 = MenuState[stateKey] and Color3.fromRGB(255,0,0) or Color3.fromRGB(150,0,0)
         btn.BorderSizePixel = 0
         btn.Text = name
         btn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -168,7 +168,7 @@ local function loadMenu()
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0.8,0,0,30)
         frame.Position = UDim2.new(0.1,0,0,yPos)
-        frame.BackgroundColor3 = Color3.fromRGB(255,140,0) -- dark orange
+        frame.BackgroundColor3 = Color3.fromRGB(255,140,0)
         frame.Parent = MainFrame
 
         local UICornerFrame = Instance.new("UICorner")
@@ -186,29 +186,37 @@ local function loadMenu()
         textLabel.Parent = frame
 
         local slider = Instance.new("Frame")
-        slider.Size = UDim2.new((MenuState[valueKey]-min)/(max-min),0,0.3,0)
+        slider.Size = UDim2.new(0, 200,0,8)
         slider.Position = UDim2.new(0,0,0.7,0)
-        slider.BackgroundColor3 = Color3.fromRGB(255,200,0) -- light orange fill
+        slider.BackgroundColor3 = Color3.fromRGB(150,0,0)
         slider.Parent = frame
 
+        local handle = Instance.new("TextButton")
+        handle.Size = UDim2.new(0,12,0,20)
+        handle.Position = UDim2.new((MenuState[valueKey]-min)/(max-min),0,0,-6)
+        handle.BackgroundColor3 = Color3.fromRGB(255,0,0)
+        handle.Text = ""
+        handle.Parent = slider
+
         local dragging = false
-        frame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-            end
+        handle.MouseButton1Down:Connect(function()
+            dragging = true
         end)
-        frame.InputEnded:Connect(function(input)
+        UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = false
             end
         end)
-        frame.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local mousePos = math.clamp(input.Position.X - frame.AbsolutePosition.X,0,frame.AbsoluteSize.X)
-                local newSize = mousePos/frame.AbsoluteSize.X
-                MenuState[valueKey] = math.floor(min + (max-min)*newSize*100)/100
-                slider.Size = UDim2.new(newSize,0,0.3,0)
-                textLabel.Text = name .. ": " .. MenuState[valueKey]
+        RunService.RenderStepped:Connect(function()
+            if dragging then
+                local mouseX = UserInputService:GetMouseLocation().X
+                local sliderPos = slider.AbsolutePosition.X
+                local sliderSize = slider.AbsoluteSize.X
+                local ratio = math.clamp((mouseX - sliderPos)/sliderSize,0,1)
+                local val = min + (max-min)*ratio
+                MenuState[valueKey] = val
+                handle.Position = UDim2.new(ratio,0,0,-6)
+                textLabel.Text = name .. ": " .. math.floor(val*100)/100
             end
         end)
     end
@@ -272,21 +280,28 @@ local function loadMenu()
             local shortest = math.huge
             local mouse = player:GetMouse()
             for _,plr in pairs(Players:GetPlayers()) do
-                if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(MenuState.aimbotPart) then
-                    local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[MenuState.aimbotPart].Position)
-                    if onScreen then
-                        local dist = (Vector2.new(screenPos.X,screenPos.Y)-Vector2.new(mouse.X,mouse.Y)).Magnitude
-                        if dist < shortest and dist < MenuState.aimbotFOV then
-                            shortest = dist
-                            closest = plr
+                if plr ~= player and isEnemy(plr) and plr.Character then
+                    local targetPart = plr.Character:FindFirstChild(MenuState.aimbotPart)
+                    if targetPart then
+                        local offset = (MenuState.aimbotPart=="Head") and Vector3.new(0,0.5,0) or Vector3.new(0,1,0)
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position + offset)
+                        if onScreen then
+                            local dist = (Vector2.new(screenPos.X,screenPos.Y)-Vector2.new(mouse.X,mouse.Y)).Magnitude
+                            if dist < shortest and dist < MenuState.aimbotFOV then
+                                shortest = dist
+                                closest = plr
+                            end
                         end
                     end
                 end
             end
             if closest and closest.Character then
-                local hrp = closest.Character[MenuState.aimbotPart]
-                local delta = Camera:WorldToViewportPoint(hrp.Position) - Vector3.new(mouse.X,mouse.Y,0)
-                pcall(function() mousemoverel(delta.X*0.5, delta.Y*0.5) end)
+                local targetPart = closest.Character:FindFirstChild(MenuState.aimbotPart)
+                if targetPart then
+                    local offset = (MenuState.aimbotPart=="Head") and Vector3.new(0,0.5,0) or Vector3.new(0,1,0)
+                    local delta = Camera:WorldToViewportPoint(targetPart.Position+offset) - Vector3.new(player:GetMouse().X,player:GetMouse().Y,0)
+                    pcall(function() mousemoverel(delta.X*0.5, delta.Y*0.5) end)
+                end
             end
         end
 
@@ -330,14 +345,14 @@ local function loadMenu()
                         bill.Name = "ESP"
                         bill.Adornee = hrp
                         bill.Size = UDim2.new(0,100,0,40)
-                        bill.StudsOffset = Vector3.new(0,2,0)
+                        bill.StudsOffset = Vector3.new(0,3,0)
                         bill.AlwaysOnTop = true
                         bill.Parent = hrp
 
                         local frame = Instance.new("Frame")
                         frame.Size = UDim2.new(1,0,1,0)
                         frame.BackgroundTransparency = 0.5
-                        frame.BackgroundColor3 = Color3.fromRGB(255,165,0)
+                        frame.BackgroundColor3 = Color3.fromRGB(255,140,0)
                         frame.BorderSizePixel = 0
                         frame.Parent = bill
 
@@ -367,8 +382,7 @@ end
 enterButton.MouseButton1Click:Connect(function()
     local validKeys = {
         ["DEVON2025"]=true,
-        ["DEVON123"]=true,
-        ["DEVON1234"]=true,
+        [""]=true
     }
     if validKeys[keyBox.Text] then
         loadMenu()
