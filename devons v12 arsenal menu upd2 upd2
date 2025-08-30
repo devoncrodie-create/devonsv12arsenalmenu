@@ -371,7 +371,7 @@ end
 enterButton.MouseButton1Click:Connect(function()
     local validKeys = {
         DEVON2025 = true,
-        TESTKEY772 = true
+        TESTKEY888 = true
     }
 
     if validKeys[keyBox.Text] then
