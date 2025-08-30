@@ -3,14 +3,25 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
-
 local player = Players.LocalPlayer
+
+--// Load previous states if exist
+local MenuState = {
+    aimbot = false,
+    esp = false,
+    hitbox = false,
+    killall = false,
+    rapidfire = false,
+    hitboxSize = 5,
+    aimbotFOV = 200,
+    rapidFireDelay = 0.1,
+    aimbotPart = "Head"
+}
 
 --// ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DevonsArsenalMenu"
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
 
 --// Main Frame
 local MainFrame = Instance.new("Frame")
@@ -22,43 +33,26 @@ MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 
 local UICornerMain = Instance.new("UICorner")
-UICornerMain.CornerRadius = UDim.new(0, 16)
+UICornerMain.CornerRadius = UDim.new(0, 12)
 UICornerMain.Parent = MainFrame
 
---// Shadow Effect
-local Shadow = Instance.new("UIStroke")
-Shadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-Shadow.Color = Color3.fromRGB(0,0,0)
-Shadow.Thickness = 2
-Shadow.Transparency = 0.7
-Shadow.Parent = MainFrame
-
 --// Header
-local Header = Instance.new("Frame")
+local Header = Instance.new("TextLabel")
 Header.Size = UDim2.new(1,0,0,60)
 Header.Position = UDim2.new(0,0,0,0)
-Header.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Header.BackgroundColor3 = Color3.fromRGB(55,55,55)
 Header.BorderSizePixel = 0
+Header.Text = "Devons Arsenal Menu (v13)"
+Header.TextColor3 = Color3.fromRGB(255,255,255)
+Header.Font = Enum.Font.GothamBold
+Header.TextSize = 26
 Header.Parent = MainFrame
 
-local HeaderGradient = Instance.new("UIGradient")
-HeaderGradient.Color = ColorSequence.new(Color3.fromRGB(50,50,50), Color3.fromRGB(70,70,70))
-HeaderGradient.Parent = Header
-
-local HeaderLabel = Instance.new("TextLabel")
-HeaderLabel.Size = UDim2.new(1,0,1,0)
-HeaderLabel.BackgroundTransparency = 1
-HeaderLabel.Text = "Devons Arsenal Menu (v12)"
-HeaderLabel.TextColor3 = Color3.fromRGB(255,255,255)
-HeaderLabel.Font = Enum.Font.GothamBold
-HeaderLabel.TextSize = 26
-HeaderLabel.Parent = Header
-
 local UICornerHeader = Instance.new("UICorner")
-UICornerHeader.CornerRadius = UDim.new(0, 16)
+UICornerHeader.CornerRadius = UDim.new(0, 12)
 UICornerHeader.Parent = Header
 
---// Header Image
+--// Comethazine Image
 local HeaderImage = Instance.new("ImageLabel")
 HeaderImage.Size = UDim2.new(0, 40, 0, 40)
 HeaderImage.Position = UDim2.new(1, -50, 0, 10)
@@ -77,26 +71,12 @@ CloseLabel.Font = Enum.Font.Gotham
 CloseLabel.TextSize = 16
 CloseLabel.Parent = MainFrame
 
---// Toggle States
-local aimbotEnabled, espEnabled, hitboxEnabled, killAllEnabled, rapidFireEnabled = false, false, false, false, false
-local hitboxSize, aimbotFOV, rapidFireDelay = 5, 200, 0.1
-local aimbotPart = "Head"
-local rapidFireLast = 0
-
---// Button Functions
-local function updateButtonColor(btn,state)
-    if state then
-        btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
-    else
-        btn.BackgroundColor3 = Color3.fromRGB(180,0,0)
-    end
-end
-
-local function createButton(name, yPos)
+--// Button Creator
+local function createButton(name, yPos, stateKey)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.8,0,0,45)
     btn.Position = UDim2.new(0.1,0,0,yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(180,0,0)
+    btn.BackgroundColor3 = MenuState[stateKey] and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -105,48 +85,31 @@ local function createButton(name, yPos)
     btn.Parent = MainFrame
 
     local UICornerBtn = Instance.new("UICorner")
-    UICornerBtn.CornerRadius = UDim.new(0, 10)
+    UICornerBtn.CornerRadius = UDim.new(0, 8)
     UICornerBtn.Parent = btn
 
     btn.MouseEnter:Connect(function()
-        btn:TweenSizeAndPosition(UDim2.new(0.82,0,0,50), btn.Position, "Out", "Quad", 0.2, true)
-        btn.BackgroundColor3 = Color3.fromRGB(220,50,50)
+        btn.BackgroundColor3 = btn.BackgroundColor3:Lerp(Color3.fromRGB(200,50,50),0.3)
     end)
     btn.MouseLeave:Connect(function()
-        btn:TweenSizeAndPosition(UDim2.new(0.8,0,0,45), btn.Position, "Out", "Quad", 0.2, true)
-        updateButtonColor(btn, btn.BackgroundColor3 == Color3.fromRGB(0,200,0))
+        if MenuState[stateKey] then
+            btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+        end
     end)
-
+    btn.MouseButton1Click:Connect(function()
+        MenuState[stateKey] = not MenuState[stateKey]
+        btn.BackgroundColor3 = MenuState[stateKey] and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+    end)
     return btn
 end
 
---// Buttons
-local AimbotButton = createButton("Aimbot", 80)
-local ESPButton = createButton("ESP", 150)
-local HitboxButton = createButton("Hitbox Extender", 220)
-local KillAllButton = createButton("Kill All", 290)
-local RapidFireButton = createButton("Rapid Fire", 360)
-
-AimbotButton.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    updateButtonColor(AimbotButton, aimbotEnabled)
-end)
-ESPButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    updateButtonColor(ESPButton, espEnabled)
-end)
-HitboxButton.MouseButton1Click:Connect(function()
-    hitboxEnabled = not hitboxEnabled
-    updateButtonColor(HitboxButton, hitboxEnabled)
-end)
-KillAllButton.MouseButton1Click:Connect(function()
-    killAllEnabled = not killAllEnabled
-    updateButtonColor(KillAllButton, killAllEnabled)
-end)
-RapidFireButton.MouseButton1Click:Connect(function()
-    rapidFireEnabled = not rapidFireEnabled
-    updateButtonColor(RapidFireButton, rapidFireEnabled)
-end)
+local AimbotButton = createButton("Aimbot", 80, "aimbot")
+local ESPButton = createButton("ESP", 150, "esp")
+local HitboxButton = createButton("Hitbox Extender", 220, "hitbox")
+local KillAllButton = createButton("Kill All", 290, "killall")
+local RapidFireButton = createButton("Rapid Fire", 360, "rapidfire")
 
 --// Head/Torso Selector
 local PartToggle = Instance.new("TextButton")
@@ -154,7 +117,7 @@ PartToggle.Size = UDim2.new(0, 60, 0, 30)
 PartToggle.Position = UDim2.new(0.65, 0, 80/650, 5)
 PartToggle.BackgroundColor3 = Color3.fromRGB(80,80,80)
 PartToggle.BorderSizePixel = 0
-PartToggle.Text = "Head"
+PartToggle.Text = MenuState.aimbotPart
 PartToggle.TextColor3 = Color3.fromRGB(255,255,255)
 PartToggle.Font = Enum.Font.Gotham
 PartToggle.TextSize = 14
@@ -165,32 +128,31 @@ UICornerToggle.CornerRadius = UDim.new(0,6)
 UICornerToggle.Parent = PartToggle
 
 PartToggle.MouseButton1Click:Connect(function()
-    if aimbotPart == "Head" then
-        aimbotPart = "Torso"
-        PartToggle.Text = "Torso"
+    if MenuState.aimbotPart == "Head" then
+        MenuState.aimbotPart = "Torso"
     else
-        aimbotPart = "Head"
-        PartToggle.Text = "Head"
+        MenuState.aimbotPart = "Head"
     end
+    PartToggle.Text = MenuState.aimbotPart
 end)
 
 --// Slider Creator
-local function createSlider(name, yPos, min, max, default, callback)
+local function createSlider(name, yPos, min, max, stateKey)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.8,0,0,40)
-    frame.Position = UDim2.new(0.1,0,0,yPos)
-    frame.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    frame.Size = UDim2.new(0.8, 0, 0, 50)
+    frame.Position = UDim2.new(0.1, 0, 0, yPos)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     frame.Parent = MainFrame
 
     local UICornerSlider = Instance.new("UICorner")
-    UICornerSlider.CornerRadius = UDim.new(0,8)
+    UICornerSlider.CornerRadius = UDim.new(0, 8)
     UICornerSlider.Parent = frame
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.6,0,1,0)
-    label.Position = UDim2.new(0,0,0,0)
+    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = name..": "..default
+    label.Text = name..": "..MenuState[stateKey]
     label.TextColor3 = Color3.fromRGB(255,255,255)
     label.Font = Enum.Font.Gotham
     label.TextSize = 16
@@ -199,12 +161,12 @@ local function createSlider(name, yPos, min, max, default, callback)
 
     local sliderBar = Instance.new("Frame")
     sliderBar.Size = UDim2.new(1, -100, 0, 10)
-    sliderBar.Position = UDim2.new(0,100,0.5,-5)
+    sliderBar.Position = UDim2.new(0, 100, 0.5, -5)
     sliderBar.BackgroundColor3 = Color3.fromRGB(150,150,150)
     sliderBar.Parent = frame
 
     local fill = Instance.new("Frame")
-    fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+    fill.Size = UDim2.new((MenuState[stateKey]-min)/(max-min),0,1,0)
     fill.BackgroundColor3 = Color3.fromRGB(0,200,0)
     fill.Parent = sliderBar
 
@@ -226,20 +188,139 @@ local function createSlider(name, yPos, min, max, default, callback)
             local value = min + (max-min)*percent
             fill.Size = UDim2.new(percent,0,1,0)
             label.Text = name..": "..math.floor(value)
-            callback(value)
+            MenuState[stateKey] = value
         end
     end)
 end
 
 --// Add Sliders
-createSlider("Hitbox Size", 430, 1, 15, hitboxSize, function(val) hitboxSize = val end)
-createSlider("Aimbot FOV", 490, 50, 500, aimbotFOV, function(val) aimbotFOV = val end)
-createSlider("Rapid Fire Speed", 550, 0.01, 0.5, rapidFireDelay, function(val) rapidFireDelay = val end)
+createSlider("Hitbox Size", 430, 1, 15, "hitboxSize")
+createSlider("Aimbot FOV", 490, 50, 500, "aimbotFOV")
+createSlider("Rapid Fire Speed", 550, 0.01, 0.5, "rapidFireDelay")
 
---// Close Menu Keybind
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightControl then
-        ScreenGui.Enabled = not ScreenGui.Enabled
+--// ESP Table
+local ESPBoxes = {}
+local function createESP(plr)
+    if ESPBoxes[plr] then return end
+    local box = Drawing.new("Quad")
+    box.Color = Color3.fromRGB(255,0,0)
+    box.Thickness = 2
+    box.Transparency = 1
+    box.Visible = true
+    ESPBoxes[plr] = {box=box, name=Drawing.new("Text"), health=Drawing.new("Text")}
+    ESPBoxes[plr].name.Text = plr.Name
+    ESPBoxes[plr].name.Color = Color3.fromRGB(255,255,255)
+    ESPBoxes[plr].name.Size = 18
+    ESPBoxes[plr].name.Visible = true
+    ESPBoxes[plr].health.Text = "100"
+    ESPBoxes[plr].health.Color = Color3.fromRGB(0,255,0)
+    ESPBoxes[plr].health.Size = 16
+    ESPBoxes[plr].health.Visible = true
+end
+
+local function removeESP(plr)
+    if ESPBoxes[plr] then
+        ESPBoxes[plr].box:Remove()
+        ESPBoxes[plr].name:Remove()
+        ESPBoxes[plr].health:Remove()
+        ESPBoxes[plr] = nil
+    end
+end
+
+local function isEnemy(plr)
+    return plr.Team ~= player.Team
+end
+
+--// Main Loop
+local rapidFireLast = 0
+RunService.RenderStepped:Connect(function()
+    local mouse = player:GetMouse()
+
+    -- Aimbot
+    if MenuState.aimbot and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local closest
+        local shortest = math.huge
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(MenuState.aimbotPart) then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[MenuState.aimbotPart].Position)
+                if onScreen then
+                    local dist = (Vector2.new(screenPos.X,screenPos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude
+                    if dist < shortest and dist < MenuState.aimbotFOV then
+                        shortest = dist
+                        closest = plr
+                    end
+                end
+            end
+        end
+        if closest then
+            local hrp = closest.Character[MenuState.aimbotPart]
+            mousemoverel((Camera:WorldToViewportPoint(hrp.Position) - Vector3.new(mouse.X,mouse.Y,0)).Unit*0.5)
+        end
+    end
+
+    -- Hitbox Extender
+    if MenuState.hitbox then
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                plr.Character.HumanoidRootPart.Size = Vector3.new(MenuState.hitboxSize,MenuState.hitboxSize,MenuState.hitboxSize)
+                plr.Character.HumanoidRootPart.Transparency = 0.5
+            end
+        end
+    end
+
+    -- ESP
+    if MenuState.esp then
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                createESP(plr)
+                local hrp = plr.Character.HumanoidRootPart
+                local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0,3,0))
+                if onScreen then
+                    local size = Vector2.new(100,100)
+                    local topLeft = Vector2.new(screenPos.X - size.X/2, screenPos.Y - size.Y/2)
+                    local bottomRight = topLeft + size
+                    local box = ESPBoxes[plr].box
+                    box.PointA = topLeft
+                    box.PointB = Vector2.new(bottomRight.X, topLeft.Y)
+                    box.PointC = bottomRight
+                    box.PointD = Vector2.new(topLeft.X, bottomRight.Y)
+                    box.Visible = true
+
+                    ESPBoxes[plr].name.Position = Vector2.new(screenPos.X, screenPos.Y-60)
+                    ESPBoxes[plr].health.Position = Vector2.new(screenPos.X, screenPos.Y-45)
+                    local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        ESPBoxes[plr].health.Text = math.floor(hum.Health).."/"..math.floor(hum.MaxHealth)
+                    end
+                else
+                    ESPBoxes[plr].box.Visible = false
+                    ESPBoxes[plr].name.Visible = false
+                    ESPBoxes[plr].health.Visible = false
+                end
+            else
+                removeESP(plr)
+            end
+        end
+    end
+
+    -- Kill All
+    if MenuState.killall then
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
+                if player.Character:FindFirstChildOfClass("Tool") then
+                    player.Character:FindFirstChildOfClass("Tool"):Activate()
+                end
+            end
+        end
+    end
+
+    -- Rapid Fire
+    if MenuState.rapidfire and tick() - rapidFireLast >= MenuState.rapidFireDelay then
+        rapidFireLast = tick()
+        if player.Character:FindFirstChildOfClass("Tool") then
+            player.Character:FindFirstChildOfClass("Tool"):Activate()
+        end
     end
 end)
 
@@ -278,144 +359,9 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
---// ESP Table
-local ESPBoxes = {}
-local function createESP(plr)
-    if ESPBoxes[plr] then return end
-    local box = Drawing.new("Quad")
-    box.Color = Color3.fromRGB(255,0,0)
-    box.Thickness = 2
-    box.Transparency = 0.5
-    box.Visible = true
-    ESPBoxes[plr] = box
-end
-local function removeESP(plr)
-    if ESPBoxes[plr] then
-        ESPBoxes[plr]:Remove()
-        ESPBoxes[plr] = nil
-    end
-end
-local function isEnemy(plr)
-    return plr.Team ~= player.Team
-end
-
---// Main Loop
-RunService.RenderStepped:Connect(function()
-    local mouse = player:GetMouse()
-
-    -- Aimbot
-    if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-        local closest
-        local shortest = math.huge
-        for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(aimbotPart) then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[aimbotPart].Position)
-                if onScreen then
-                    local dist = (Vector2.new(screenPos.X,screenPos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude
-                    if dist < shortest and dist < aimbotFOV then
-                        shortest = dist
-                        closest = plr
-                    end
-                end
-            end
-        end
-        if closest then
-            local hrp = closest.Character[aimbotPart]
-            mousemoverel((Camera:WorldToViewportPoint(hrp.Position) - Vector3.new(mouse.X,mouse.Y,0)).Unit*0.5)
-        end
-    end
-
-    -- Hitbox Extender
-    if hitboxEnabled then
-        for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                plr.Character.HumanoidRootPart.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
-                plr.Character.HumanoidRootPart.Transparency = 0.5
-            end
-        end
-    end
-
-    --// ESP Table
-local ESPBoxes = {}
-
-local function createESP(plr)
-    if ESPBoxes[plr] then return end
-    local box = Drawing.new("Quad")
-    box.Color = Color3.fromRGB(255, 0, 0)
-    box.Thickness = 2
-    box.Transparency = 1
-    box.Visible = true
-    ESPBoxes[plr] = box
-end
-
-local function removeESP(plr)
-    if ESPBoxes[plr] then
-        ESPBoxes[plr]:Remove()
-        ESPBoxes[plr] = nil
-    end
-end
-
-local function isEnemy(plr)
-    return plr.Team ~= player.Team
-end
-
---// Update ESP
-RunService.RenderStepped:Connect(function()
-    for _,plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            if espEnabled and isEnemy(plr) then
-                createESP(plr)
-                local hrp = plr.Character.HumanoidRootPart
-
-                -- Get head and root positions to scale box
-                local head = plr.Character:FindFirstChild("Head")
-                if head then
-                    local topPos, onScreenTop = Camera:WorldToViewportPoint(head.Position + Vector3.new(0,0.5,0))
-                    local bottomPos, onScreenBottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0,1,0))
-                    if onScreenTop or onScreenBottom then
-                        local sizeY = math.abs(topPos.Y - bottomPos.Y)
-                        local sizeX = sizeY/2 -- box width proportional to height
-                        local topLeft = Vector2.new(topPos.X - sizeX/2, topPos.Y)
-                        local topRight = Vector2.new(topPos.X + sizeX/2, topPos.Y)
-                        local bottomLeft = Vector2.new(bottomPos.X - sizeX/2, bottomPos.Y)
-                        local bottomRight = Vector2.new(bottomPos.X + sizeX/2, bottomPos.Y)
-
-                        local box = ESPBoxes[plr]
-                        box.PointA = topLeft
-                        box.PointB = topRight
-                        box.PointC = bottomRight
-                        box.PointD = bottomLeft
-                        box.Visible = true
-                    else
-                        ESPBoxes[plr].Visible = false
-                    end
-                end
-            else
-                removeESP(plr)
-            end
-        else
-            removeESP(plr)
-        end
-    end
-end)
-
-    -- Kill All
-    if killAllEnabled then
-        for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
-                if player.Character:FindFirstChildOfClass("Tool") then
-                    player.Character:FindFirstChildOfClass("Tool"):Activate()
-                end
-            end
-        end
-    end
-
-    -- Rapid Fire
-    if rapidFireEnabled and tick() - rapidFireLast >= rapidFireDelay then
-        rapidFireLast = tick()
-        if player.Character:FindFirstChildOfClass("Tool") then
-            player.Character:FindFirstChildOfClass("Tool"):Activate()
-        end
+--// Close Menu Keybind
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)
