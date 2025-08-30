@@ -7,7 +7,7 @@ local Camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 
 --// Key System
-local keyURL = "https://raw.githubusercontent.com/devoncrodie-create/devonsv12arsenalmenukeysystem/main/arsenal%20key%20system%20upd2"
+local keyURL = "https://raw.githubusercontent.com/devoncrodie-create/devonsv12arsenalmenukeysystem/refs/heads/main/arsenal%20key%20system%20upd2"
 local MenuLoaded = false
 
 --// GUI
