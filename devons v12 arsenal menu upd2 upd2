@@ -66,6 +66,11 @@ enterButton.Font = Enum.Font.GothamBold
 enterButton.TextSize = 22
 enterButton.Parent = keyFrame
 
+--// Function to check enemy
+local function isEnemy(plr)
+    return plr.Team ~= player.Team
+end
+
 --// Load Menu
 local function loadMenu()
     keyGui:Destroy()
@@ -102,19 +107,17 @@ local function loadMenu()
     HeaderTitle.Font = Enum.Font.GothamBold
     HeaderTitle.TextSize = 26
     HeaderTitle.Parent = Header
--- header image
-    local HeaderImage = Instance.new("ImageLabel")
-HeaderImage.AnchorPoint = Vector2.new(1, 0.5) -- anchor to right middle
-HeaderImage.Size = UDim2.new(0, 40, 0, 40)
-HeaderImage.Position = UDim2.new(1, -10, 0.5, 0) -- 10px from right, vertically centered
-HeaderImage.BackgroundTransparency = 1
-HeaderImage.Image = "rbxassetid://105378501123309"
-HeaderImage.ImageColor3 = Color3.fromRGB(255,255,255) -- keep image visible
-HeaderImage.ScaleType = Enum.ScaleType.Fit -- prevent stretching
-HeaderImage.Parent = Header
-HeaderImage.ZIndex = 2
 
-    -- Buttons
+    local HeaderImage = Instance.new("ImageLabel")
+    HeaderImage.AnchorPoint = Vector2.new(1,0.5)
+    HeaderImage.Size = UDim2.new(0,40,0,40)
+    HeaderImage.Position = UDim2.new(1,-10,0.5,0)
+    HeaderImage.BackgroundTransparency = 1
+    HeaderImage.Image = "rbxassetid://105378501123309"
+    HeaderImage.ScaleType = Enum.ScaleType.Fit
+    HeaderImage.Parent = Header
+
+    -- Button creator
     local function createButton(name, yPos, stateKey)
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(0.8,0,0,45)
@@ -145,7 +148,7 @@ HeaderImage.ZIndex = 2
     createButton("Rapid Fire", 360, "rapidfire")
     createButton("Show FOV", 430, "showFOV")
 
-    -- Head/Torso toggle
+    -- Part toggle
     local PartToggle = Instance.new("TextButton")
     PartToggle.Size = UDim2.new(0,60,0,30)
     PartToggle.Position = UDim2.new(0.65,0,80/650,5)
@@ -162,7 +165,7 @@ HeaderImage.ZIndex = 2
         PartToggle.Text = MenuState.aimbotPart
     end)
 
-    -- Sliders
+    -- Slider creator
     local function createSlider(name, yPos, min, max, stateKey)
         local SliderLabel = Instance.new("TextLabel")
         SliderLabel.Size = UDim2.new(0.8,0,0,25)
@@ -213,12 +216,12 @@ HeaderImage.ZIndex = 2
         end)
     end
 
-    -- Slider calls
+    -- Sliders
     createSlider("Aimbot FOV", 500, 50, 500, "aimbotFOV")
     createSlider("Hitbox Size", 540, 2, 20, "hitboxSize")
     createSlider("Rapid Fire Delay", 580, 0.01, 0.5, "rapidFireDelay")
 
-    -- Drag Header
+    -- Drag header
     local dragging = false
     local dragInput, mousePos, framePos
     Header.InputBegan:Connect(function(input)
@@ -254,15 +257,14 @@ HeaderImage.ZIndex = 2
     end)
 
     --=== CHEATS ===
-    local function isEnemy(plr)
-        return plr.Team ~= player.Team
-    end
+    local rapidFireLast = 0
+    local fovCircle
 
     local function getClosestTarget()
         local closest, shortest = nil, math.huge
         local mouse = UserInputService:GetMouseLocation()
         for _,plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character and isEnemy(plr) and plr.Character:FindFirstChild(MenuState.aimbotPart) then
+            if plr ~= player and isEnemy(plr) and plr.Character and plr.Character:FindFirstChild(MenuState.aimbotPart) then
                 local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character[MenuState.aimbotPart].Position)
                 if onScreen then
                     local dist = (Vector2.new(screenPos.X,screenPos.Y)-Vector2.new(mouse.X,mouse.Y)).Magnitude
@@ -276,8 +278,6 @@ HeaderImage.ZIndex = 2
         return closest
     end
 
-    local rapidFireLast = 0
-    local fovCircle
     RunService.RenderStepped:Connect(function()
         -- Aimbot
         if MenuState.aimbot and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
@@ -324,18 +324,21 @@ HeaderImage.ZIndex = 2
             for _,plr in pairs(Players:GetPlayers()) do
                 if plr ~= player and isEnemy(plr) and plr.Character then
                     for _,part in pairs(plr.Character:GetChildren()) do
-                        if part:IsA("BasePart") and not part:FindFirstChild("ESP") then
-                            local box = Instance.new("BoxHandleAdornment")
-                            box.Name = "ESP"
-                            box.Adornee = part
-                            box.AlwaysOnTop = true
-                            box.ZIndex = 2
-                            box.Size = part.Size
-                            box.Color3 = Color3.fromRGB(255,140,0)
-                            box.Transparency = 0.5
-                            box.Parent = part
-                        elseif part:IsA("BasePart") and part:FindFirstChild("ESP") then
-                            part.ESP.Size = part.Size
+                        if part:IsA("BasePart") then
+                            local existing = part:FindFirstChild("ESP")
+                            if not existing then
+                                local box = Instance.new("BoxHandleAdornment")
+                                box.Name = "ESP"
+                                box.Adornee = part
+                                box.AlwaysOnTop = true
+                                box.ZIndex = 2
+                                box.Size = part.Size
+                                box.Color3 = Color3.fromRGB(255,140,0)
+                                box.Transparency = 0.5
+                                box.Parent = part
+                            else
+                                existing.Size = part.Size
+                            end
                         end
                     end
                 end
