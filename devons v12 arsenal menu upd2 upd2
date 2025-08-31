@@ -372,7 +372,7 @@ end
 
 -- Key Button
 enterButton.MouseButton1Click:Connect(function()
-    if keyBox.Text == "DEVON2025" then
+    if keyBox.Text == "Jordan 11s" then
         keyLabel.Text = "Valid Key!"
         keyLabel.TextColor3 = Color3.fromRGB(0,255,0)
         wait(0.5)
