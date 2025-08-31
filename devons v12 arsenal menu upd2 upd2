@@ -102,15 +102,17 @@ local function loadMenu()
     HeaderTitle.Font = Enum.Font.GothamBold
     HeaderTitle.TextSize = 26
     HeaderTitle.Parent = Header
-
-    -- Header Image
+-- header image
     local HeaderImage = Instance.new("ImageLabel")
-    HeaderImage.Size = UDim2.new(0,40,0,40)
-    HeaderImage.Position = UDim2.new(1,-50,0.5,-20)
-    HeaderImage.BackgroundTransparency = 1
-    HeaderImage.Image = "rbxassetid://105378501123309"
-    HeaderImage.Parent = Header
-    HeaderImage.ZIndex = 2
+HeaderImage.AnchorPoint = Vector2.new(1, 0.5) -- anchor to right middle
+HeaderImage.Size = UDim2.new(0, 40, 0, 40)
+HeaderImage.Position = UDim2.new(1, -10, 0.5, 0) -- 10px from right, vertically centered
+HeaderImage.BackgroundTransparency = 1
+HeaderImage.Image = "rbxassetid://105378501123309"
+HeaderImage.ImageColor3 = Color3.fromRGB(255,255,255) -- keep image visible
+HeaderImage.ScaleType = Enum.ScaleType.Fit -- prevent stretching
+HeaderImage.Parent = Header
+HeaderImage.ZIndex = 2
 
     -- Buttons
     local function createButton(name, yPos, stateKey)
